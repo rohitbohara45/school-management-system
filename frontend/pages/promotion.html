@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promotion — SchoolMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .att-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .att-fill {
+            height: 100%;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h2>SchoolMS</h2><small>Admin Panel</small>
+            </div>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="students.html">Students</a>
+                <a href="teachers.html">Teachers</a>
+                <a href="classes.html">Classes</a>
+                <a href="subjects.html">Subjects</a>
+                <a href="exams.html">Exams</a>
+                <a href="marks.html">Marks</a>
+                <a href="attendance.html">Attendance</a>
+                <a href="fees.html">Fees</a>
+                <a href="notices.html">Notices</a>
+                <a href="timetable.html">Timetable</a>
+                <a href="promotion.html" class="active">Promotion</a>
+            </nav>
+            <div class="sidebar-footer">
+                <span id="adminName">Admin</span>
+                <button class="btn-logout" onclick="handleLogout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Student Promotion</h1>
+            </div>
+
+            <!-- Tabs -->
+            <div class="page-tabs mb-4" style="width:fit-content;">
+                <button class="page-tab active" onclick="switchTab('promote', this)">
+                    <i class="bi bi-arrow-up-circle"></i> Promote Students
+                </button>
+                <button class="page-tab" onclick="switchTab('history', this)">
+                    <i class="bi bi-clock-history"></i> Promotion History
+                </button>
+                <button class="page-tab" onclick="switchTab('lowatt', this)">
+                    <i class="bi bi-exclamation-triangle"></i> Low Attendance
+                </button>
+            </div>
+
+            <!-- Promote tab -->
+            <div id="tab-promote">
+                <div class="row g-4">
+
+                    <!-- Step 1: Select class -->
+                    <div class="col-md-5">
+                        <div class="card" style="padding:24px;">
+                            <h5 style="font-weight:700;margin-bottom:16px;color:#1e2a3a;">
+                                <span style="background:#2563eb;color:#fff;border-radius:50%;
+                           width:24px;height:24px;display:inline-flex;
+                           align-items:center;justify-content:center;
+                           font-size:12px;margin-right:8px;">1</span>
+                                Select Class to Promote From
+                            </h5>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label" style="font-size:13px;font-weight:500;">
+                                    From Class
+                                </label>
+                                <select id="fromClass" onchange="loadEligibleStudents()" style="width:100%;padding:9px 12px;border:1px solid #d1d5db;
+                       border-radius:7px;font-size:14px;">
+                                    <option value="">— Select class —</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label" style="font-size:13px;font-weight:500;">
+                                    To Class
+                                </label>
+                                <select id="toClass" style="width:100%;padding:9px 12px;border:1px solid #d1d5db;
+                       border-radius:7px;font-size:14px;">
+                                    <option value="">— Select destination class —</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" style="font-size:13px;font-weight:500;">
+                                        From Year
+                                    </label>
+                                    <input type="number" id="fromYear" value="2024" style="width:100%;padding:9px 12px;border:1px solid #d1d5db;
+                         border-radius:7px;font-size:14px;">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" style="font-size:13px;font-weight:500;">
+                                        To Year
+                                    </label>
+                                    <input type="number" id="toYear" value="2025" style="width:100%;padding:9px 12px;border:1px solid #d1d5db;
+                         border-radius:7px;font-size:14px;">
+                                </div>
+                            </div>
+
+                            <div style="margin-top:16px;padding:12px;background:#fffbeb;
+                        border:1px solid #fde68a;border-radius:8px;
+                        font-size:12px;color:#92400e;">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Warning:</strong> Promotion cannot be undone automatically.
+                                Students will be moved to the new class permanently.
+                                Their old data (marks, attendance) is preserved.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Students list -->
+                    <div class="col-md-7">
+                        <div class="card" style="padding:24px;">
+                            <div style="display:flex;justify-content:space-between;
+                        align-items:center;margin-bottom:16px;">
+                                <h5 style="font-weight:700;color:#1e2a3a;margin:0;">
+                                    <span style="background:#2563eb;color:#fff;border-radius:50%;
+                             width:24px;height:24px;display:inline-flex;
+                             align-items:center;justify-content:center;
+                             font-size:12px;margin-right:8px;">2</span>
+                                    Students to Promote
+                                </h5>
+                                <button class="btn btn-primary btn-sm" id="bulkPromoteBtn" onclick="doBulkPromotion()"
+                                    style="display:none;">
+                                    <i class="bi bi-arrow-up-circle"></i>
+                                    Promote All
+                                </button>
+                            </div>
+
+                            <div id="eligibleList">
+                                <div class="text-center py-4 text-muted" style="font-size:14px;">
+                                    Select a class to see students.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- History tab -->
+            <div id="tab-history" style="display:none;">
+                <div class="card" style="padding:20px;">
+                    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
+                        <label style="font-size:13px;font-weight:500;">Year:</label>
+                        <select id="historyYear" onchange="loadHistory()" style="padding:7px 12px;border:1px solid #d1d5db;
+                   border-radius:7px;font-size:13px;">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2023">2023</option>
+                        </select>
+                    </div>
+                    <div id="historyList">
+                        <div class="loading">Loading history...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low attendance tab -->
+            <div id="tab-lowatt" style="display:none;">
+                <div class="card" style="padding:20px;">
+                    <div style="display:flex;gap:12px;align-items:center;
+                    margin-bottom:16px;flex-wrap:wrap;">
+                        <label style="font-size:13px;font-weight:500;">
+                            Threshold (%):
+                        </label>
+                        <input type="number" id="attThreshold" value="75" min="1" max="100" style="width:80px;padding:7px 12px;border:1px solid #d1d5db;
+                   border-radius:7px;font-size:13px;">
+                        <select id="lowAttClass" style="padding:7px 12px;border:1px solid #d1d5db;
+                   border-radius:7px;font-size:13px;">
+                            <option value="">All Classes</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="loadLowAttendance()">
+                            Check
+                        </button>
+                        <span id="lowAttCount" style="font-size:13px;color:#dc2626;font-weight:500;"></span>
+                    </div>
+
+                    <div id="lowAttList">
+                        <div class="loading">
+                            Set threshold and click Check to find students.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        requireAuth();
+        document.getElementById('adminName').textContent =
+            localStorage.getItem('adminName') || 'Admin';
+
+        let allClasses = [];
+
+        function switchTab(name, btn) {
+            ['promote', 'history', 'lowatt'].forEach(t => {
+                document.getElementById(`tab-${t}`).style.display = 'none';
+            });
+            document.querySelectorAll('.page-tab').forEach(b =>
+                b.classList.remove('active')
+            );
+            document.getElementById(`tab-${name}`).style.display = 'block';
+            btn.classList.add('active');
+
+            if (name === 'history') loadHistory();
+            if (name === 'lowatt') loadLowAttendance();
+        }
+
+        async function loadClasses() {
+            try {
+                const res = await ClassesAPI.getAll();
+                allClasses = res.data;
+                const opts = allClasses.map(c =>
+                    `<option value="${c.id}">${c.name} - ${c.section}</option>`
+                ).join('');
+                const ph = '<option value="">— Select class —</option>';
+
+                document.getElementById('fromClass').innerHTML = ph + opts;
+                document.getElementById('toClass').innerHTML = ph + opts;
+                document.getElementById('lowAttClass').innerHTML =
+                    '<option value="">All Classes</option>' + opts;
+            } catch (err) { }
+        }
+
+        async function loadEligibleStudents() {
+            const classId = document.getElementById('fromClass').value;
+            if (!classId) {
+                document.getElementById('eligibleList').innerHTML =
+                    '<div class="text-center py-4 text-muted" style="font-size:14px;">Select a class.</div>';
+                document.getElementById('bulkPromoteBtn').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('eligibleList').innerHTML =
+                '<div class="loading">Loading students...</div>';
+
+            try {
+                const res = await PromotionAPI.getEligible(classId);
+                const students = res.data;
+
+                if (!students.length) {
+                    document.getElementById('eligibleList').innerHTML =
+                        '<div class="text-center py-4 text-muted">No students in this class.</div>';
+                    document.getElementById('bulkPromoteBtn').style.display = 'none';
+                    return;
+                }
+
+                document.getElementById('bulkPromoteBtn').style.display = 'inline-flex';
+
+                const rows = students.map(s => {
+                    const pct = s.attendance_pct || 0;
+                    const barColor = pct >= 75 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
+                    return `
+          <div style="display:flex;align-items:center;padding:10px 0;
+                      border-bottom:1px solid #f1f5f9;gap:12px;">
+            <div style="flex:1;">
+              <div style="font-weight:500;font-size:14px;">${s.name}</div>
+              <div style="font-size:12px;color:#64748b;">
+                ${s.total_days || 0} days tracked
+              </div>
+              <div class="att-bar">
+                <div class="att-fill"
+                  style="width:${pct}%;background:${barColor};"></div>
+              </div>
+            </div>
+            <div style="text-align:right;min-width:60px;">
+              <div style="font-size:16px;font-weight:700;
+                          color:${barColor};">
+                ${pct}%
+              </div>
+              <div style="font-size:10px;color:#94a3b8;">attendance</div>
+            </div>
+            <button class="btn btn-sm"
+              style="background:#eff6ff;color:#2563eb;
+                     border:1px solid #bfdbfe;font-size:12px;white-space:nowrap;"
+              onclick="promoteOneStudent(${s.id}, '${s.name}')">
+              Promote
+            </button>
+          </div>`;
+                }).join('');
+
+                document.getElementById('eligibleList').innerHTML = `
+        <div style="font-size:12px;color:#64748b;margin-bottom:10px;">
+          ${students.length} student(s) in this class
+        </div>
+        ${rows}`;
+
+            } catch (err) {
+                document.getElementById('eligibleList').innerHTML =
+                    `<div class="loading">${err.message}</div>`;
+            }
+        }
+
+        async function promoteOneStudent(studentId, name) {
+            const toClassId = document.getElementById('toClass').value;
+            const fromClassId = document.getElementById('fromClass').value;
+            const fromYear = parseInt(document.getElementById('fromYear').value);
+            const toYear = parseInt(document.getElementById('toYear').value);
+
+            if (!toClassId) {
+                showToast('Select a destination class first', 'error'); return;
+            }
+            if (toClassId === fromClassId) {
+                showToast('Destination class must be different', 'error'); return;
+            }
+            if (!confirm(`Promote "${name}" to the selected class?`)) return;
+
+            try {
+                await PromotionAPI.promoteOne({
+                    student_id: studentId,
+                    from_class_id: fromClassId,
+                    to_class_id: toClassId,
+                    from_year: fromYear,
+                    to_year: toYear
+                });
+                showToast(`${name} promoted successfully`);
+                loadEligibleStudents();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function doBulkPromotion() {
+            const fromClassId = document.getElementById('fromClass').value;
+            const toClassId = document.getElementById('toClass').value;
+            const fromYear = parseInt(document.getElementById('fromYear').value);
+            const toYear = parseInt(document.getElementById('toYear').value);
+
+            if (!toClassId) {
+                showToast('Select a destination class', 'error'); return;
+            }
+            if (toClassId === fromClassId) {
+                showToast('Destination class must be different', 'error'); return;
+            }
+
+            const fromClass = allClasses.find(c => c.id == fromClassId);
+            const toClass = allClasses.find(c => c.id == toClassId);
+
+            if (!confirm(
+                `Promote ALL students from ${fromClass?.name} ${fromClass?.section}\n` +
+                `to ${toClass?.name} ${toClass?.section}?\n\n` +
+                `Academic year: ${fromYear} → ${toYear}\n\n` +
+                `This cannot be undone automatically.`
+            )) return;
+
+            try {
+                const res = await PromotionAPI.promoteClass({
+                    from_class_id: fromClassId,
+                    to_class_id: toClassId,
+                    from_year: fromYear,
+                    to_year: toYear
+                });
+                showToast(res.message);
+                loadEligibleStudents();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function loadHistory() {
+            const year = document.getElementById('historyYear').value;
+            try {
+                const res = await PromotionAPI.getByYear(year);
+                const history = res.data;
+
+                if (!history.length) {
+                    document.getElementById('historyList').innerHTML =
+                        '<div class="loading">No promotions recorded for this year.</div>';
+                    return;
+                }
+
+                const rows = history.map(h => `
+        <tr>
+          <td style="padding:10px 14px;">${h.student_name}</td>
+          <td style="padding:10px 14px;">
+            ${h.from_class_name} ${h.from_class_section}
+          </td>
+          <td style="padding:10px 14px;">
+            <i class="bi bi-arrow-right" style="color:#2563eb;"></i>
+          </td>
+          <td style="padding:10px 14px;">
+            ${h.to_class_name} ${h.to_class_section}
+          </td>
+          <td style="padding:10px 14px;color:#64748b;font-size:12px;">
+            ${h.from_year} → ${h.to_year}
+          </td>
+          <td style="padding:10px 14px;font-size:12px;color:#94a3b8;">
+            ${new Date(h.promoted_at).toLocaleDateString('en-GB', {
+                    day: 'numeric', month: 'short', year: 'numeric'
+                })}
+          </td>
+        </tr>
+      `).join('');
+
+                document.getElementById('historyList').innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <thead>
+            <tr style="background:#f8fafc;">
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#64748b;border-bottom:1px solid #e8ecf0;">Student</th>
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#64748b;border-bottom:1px solid #e8ecf0;">From Class</th>
+              <th style="padding:10px 14px;border-bottom:1px solid #e8ecf0;"></th>
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#64748b;border-bottom:1px solid #e8ecf0;">To Class</th>
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#64748b;border-bottom:1px solid #e8ecf0;">Year</th>
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#64748b;border-bottom:1px solid #e8ecf0;">Date</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+            } catch (err) {
+                document.getElementById('historyList').innerHTML =
+                    `<div class="loading">${err.message}</div>`;
+            }
+        }
+
+        async function loadLowAttendance() {
+            const threshold = document.getElementById('attThreshold').value || 75;
+            const classId = document.getElementById('lowAttClass').value || null;
+
+            document.getElementById('lowAttList').innerHTML =
+                '<div class="loading">Checking attendance...</div>';
+
+            try {
+                const res = await AttendanceAPI.getLowAttendance(threshold, classId);
+                const students = res.data;
+
+                document.getElementById('lowAttCount').textContent =
+                    students.length
+                        ? `${students.length} student(s) below ${threshold}%`
+                        : `All students above ${threshold}%`;
+
+                if (!students.length) {
+                    document.getElementById('lowAttList').innerHTML = `
+          <div style="text-align:center;padding:32px;">
+            <i class="bi bi-check-circle"
+               style="font-size:36px;color:#16a34a;display:block;margin-bottom:8px;"></i>
+            <div style="font-size:14px;color:#16a34a;font-weight:600;">
+              All students have attendance above ${threshold}%
+            </div>
+          </div>`;
+                    return;
+                }
+
+                const rows = students.map(s => {
+                    const pct = s.percentage || 0;
+                    const barColor = pct >= 75 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
+                    return `
+          <tr>
+            <td style="padding:10px 14px;">
+              <strong>${s.name}</strong>
+              <div style="font-size:11px;color:#94a3b8;">${s.email || '—'}</div>
+            </td>
+            <td style="padding:10px 14px;">
+              ${s.class_name} ${s.class_section}
+            </td>
+            <td style="padding:10px 14px;">
+              ${s.present_days || 0} / ${s.total_days || 0} days
+            </td>
+            <td style="padding:10px 14px;min-width:140px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="flex:1;height:8px;background:#e2e8f0;border-radius:20px;overflow:hidden;">
+                  <div style="width:${pct}%;height:100%;background:${barColor};border-radius:20px;"></div>
+                </div>
+                <span style="font-size:13px;font-weight:700;color:${barColor};min-width:40px;">
+                  ${pct}%
+                </span>
+              </div>
+            </td>
+            <td style="padding:10px 14px;">
+              <span style="padding:3px 10px;border-radius:20px;font-size:11px;
+                           font-weight:700;background:#fff5f5;color:#dc2626;
+                           border:1px solid #fecaca;">
+                <i class="bi bi-exclamation-triangle"></i> LOW
+              </span>
+            </td>
+          </tr>`;
+                }).join('');
+
+                document.getElementById('lowAttList').innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <thead>
+            <tr style="background:#fff5f5;">
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#dc2626;border-bottom:1px solid #fecaca;">Student</th>
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#dc2626;border-bottom:1px solid #fecaca;">Class</th>
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#dc2626;border-bottom:1px solid #fecaca;">Days Present</th>
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#dc2626;border-bottom:1px solid #fecaca;">Attendance %</th>
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#dc2626;border-bottom:1px solid #fecaca;">Status</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+            } catch (err) {
+                document.getElementById('lowAttList').innerHTML =
+                    `<div class="loading">${err.message}</div>`;
+            }
+        }
+
+        function handleLogout() {
+            removeToken();
+            window.location.href = 'login.html';
+        }
+
+        loadClasses();
+    </script>
+</body>
+
+</html>

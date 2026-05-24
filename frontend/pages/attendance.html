@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance — School Management</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>SchoolMS</h2><small>Admin Panel</small>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="students.html">Students</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="classes.html">Classes</a>
+        <a href="subjects.html">Subjects</a>
+        <a href="exams.html">Exams</a>
+        <a href="marks.html">Marks</a>
+        <a href="attendance.html" class="active">Attendance</a>
+        <a href="fees.html">Fees</a>
+        <a href="notices.html">Notices</a>
+        <a href="timetable.html">Timetable</a>
+        <a href="promotion.html">Promotion</a>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="adminName">Admin</span>
+        <button class="btn-logout" onclick="handleLogout()">Logout</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <div class="page-header">
+        <h1>Attendance</h1>
+      </div>
+
+      <!-- Tabs -->
+      <div class="page-tabs mb-4" style="width:fit-content;">
+        <button class="page-tab active" onclick="switchTab('daily', this)">
+          <i class="bi bi-calendar-check"></i> Daily
+        </button>
+        <button class="page-tab" onclick="switchTab('monthly', this)">
+          <i class="bi bi-calendar-month"></i> Monthly Summary
+        </button>
+      </div>
+
+      <!-- Daily tab -->
+      <div id="tab-daily">
+        <div class="card">
+          <div class="card-header">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <input type="date" id="dateInput"
+                style="padding:7px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+              <select id="classFilterAtt"
+                style="padding:7px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+                <option value="">All Classes</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="loadAttendance()">Load</button>
+              <button class="btn btn-sm" style="background:#1e2a3a;color:#fff;border-radius:7px;" id="saveAllBtn"
+                onclick="saveAttendance()">
+                Save All
+              </button>
+            </div>
+          </div>
+          <div id="attTitle" style="padding:10px 16px;font-size:13px;font-weight:600;
+               color:#1e2a3a;background:#f8fafc;border-bottom:1px solid #e8ecf0;">
+          </div>
+          <div id="attSummary" style="padding:8px 16px;font-size:13px;color:#64748b;
+               background:#f8fafc;border-bottom:1px solid #e8ecf0;">
+          </div>
+          <div id="attTable">
+            <div class="loading">Select a date and click Load.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly tab -->
+      <div id="tab-monthly" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <select id="monthlyClass"
+                style="padding:7px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+                <option value="">— Select class —</option>
+              </select>
+              <select id="monthlyMonth"
+                style="padding:7px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+              <input type="number" id="monthlyYear" value="2024" style="width:80px;padding:7px 12px;border:1px solid #d1d5db;
+                   border-radius:7px;font-size:13px;">
+              <button class="btn btn-primary btn-sm" onclick="loadMonthly()">
+                Load Summary
+              </button>
+            </div>
+          </div>
+          <div id="monthlyTable">
+            <div class="loading">Select a class, month, and year.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    requireAuth();
+    document.getElementById('adminName').textContent =
+      localStorage.getItem('adminName') || 'Admin';
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateInput').value = today;
+    document.getElementById('monthlyMonth').value =
+      String(new Date().getMonth() + 1);
+
+    let currentRecords = [];
+
+    function switchTab(name, btn) {
+      ['daily', 'monthly'].forEach(t => {
+        document.getElementById(`tab-${t}`).style.display = 'none';
+      });
+      document.querySelectorAll('.page-tab').forEach(b => b.classList.remove('active'));
+      document.getElementById(`tab-${name}`).style.display = 'block';
+      btn.classList.add('active');
+    }
+
+    async function loadClassDropdowns() {
+      try {
+        const res = await ClassesAPI.getAll();
+        const opts = res.data.map(c =>
+          `<option value="${c.id}">${c.name} - ${c.section}</option>`
+        ).join('');
+        const ph = '<option value="">All Classes</option>';
+        document.getElementById('classFilterAtt').innerHTML = ph + opts;
+        document.getElementById('monthlyClass').innerHTML =
+          '<option value="">— Select class —</option>' + opts;
+      } catch (err) { }
+    }
+
+    async function loadAttendance() {
+      const date = document.getElementById('dateInput').value;
+      const classId = document.getElementById('classFilterAtt').value;
+      if (!date) { showToast('Select a date', 'error'); return; }
+
+      document.getElementById('attTable').innerHTML =
+        '<div class="loading">Loading...</div>';
+
+      try {
+        const studRes = await StudentsAPI.getAll();
+        let students = studRes.data;
+        if (classId) {
+          students = students.filter(s => s.class_id == classId);
+        }
+
+        const attRes = await AttendanceAPI.getByDate(date, classId || null);
+        const attMap = {};
+        attRes.data.forEach(a => { attMap[a.student_id] = a.status; });
+
+        currentRecords = students.map(s => ({
+          student_id: s.id,
+          name: s.name,
+          class: s.class_name
+            ? s.class_name + ' ' + s.class_section : '—',
+          status: attMap[s.id] || 'present'
+        }));
+
+        renderAttTable(date);
+      } catch (err) {
+        document.getElementById('attTable').innerHTML =
+          '<div class="loading">Failed to load.</div>';
+      }
+    }
+
+    function renderAttTable(date) {
+      document.getElementById('attTitle').textContent = `Attendance — ${date}`;
+      updateSummary();
+
+      if (!currentRecords.length) {
+        document.getElementById('attTable').innerHTML =
+          '<div class="loading">No students found.</div>';
+        return;
+      }
+
+      const rows = currentRecords.map((r, i) => `
+      <tr>
+        <td style="padding:8px 12px;font-weight:500;">${r.name}</td>
+        <td style="padding:8px 12px;color:#64748b;">${r.class}</td>
+        <td style="padding:8px 12px;">
+          <select onchange="updateStatus(${i}, this.value)"
+            style="padding:5px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:13px;">
+            <option value="present" ${r.status === 'present' ? 'selected' : ''}>Present</option>
+            <option value="absent"  ${r.status === 'absent' ? 'selected' : ''}>Absent</option>
+            <option value="late"    ${r.status === 'late' ? 'selected' : ''}>Late</option>
+          </select>
+        </td>
+      </tr>`).join('');
+
+      document.getElementById('attTable').innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <thead style="background:#f8fafc;">
+          <tr>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;
+                       color:#64748b;border-bottom:1px solid #e8ecf0;">Student</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;
+                       color:#64748b;border-bottom:1px solid #e8ecf0;">Class</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;
+                       color:#64748b;border-bottom:1px solid #e8ecf0;">Status</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    }
+
+    function updateStatus(index, status) {
+      currentRecords[index].status = status;
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const present = currentRecords.filter(r => r.status === 'present').length;
+      const absent = currentRecords.filter(r => r.status === 'absent').length;
+      const late = currentRecords.filter(r => r.status === 'late').length;
+      document.getElementById('attSummary').textContent =
+        `Present: ${present} | Absent: ${absent} | Late: ${late} | Total: ${currentRecords.length}`;
+    }
+
+    async function saveAttendance() {
+      if (!currentRecords.length) {
+        showToast('Load students first', 'error'); return;
+      }
+      const date = document.getElementById('dateInput').value;
+      const records = currentRecords.map(r => ({
+        student_id: r.student_id, status: r.status
+      }));
+      const btn = document.getElementById('saveAllBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      try {
+        await AttendanceAPI.bulkMark({ date, records });
+        showToast(`Attendance saved for ${records.length} students`);
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save All';
+      }
+    }
+
+    async function loadMonthly() {
+      const classId = document.getElementById('monthlyClass').value;
+      const month = document.getElementById('monthlyMonth').value;
+      const year = document.getElementById('monthlyYear').value;
+
+      if (!classId) { showToast('Select a class', 'error'); return; }
+
+      document.getElementById('monthlyTable').innerHTML =
+        '<div class="loading">Loading...</div>';
+
+      try {
+        const res = await AttendanceAPI.getMonthlySummary(classId, year, month);
+        const students = res.data;
+
+        if (!students.length) {
+          document.getElementById('monthlyTable').innerHTML =
+            '<div class="loading">No data found.</div>';
+          return;
+        }
+
+        const rows = students.map(s => {
+          const pct = s.percentage || 0;
+          const barColor = pct >= 75
+            ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
+          const alert = pct < 75
+            ? `<span style="color:#dc2626;font-size:11px;font-weight:600;margin-left:6px;">
+               <i class="bi bi-exclamation-triangle"></i> LOW
+             </span>`
+            : '';
+          return `
+          <tr>
+            <td style="padding:10px 14px;font-weight:500;">${s.student_name}</td>
+            <td style="padding:10px 14px;text-align:center;">${s.total_days || 0}</td>
+            <td style="padding:10px 14px;text-align:center;color:#16a34a;font-weight:600;">
+              ${s.present || 0}
+            </td>
+            <td style="padding:10px 14px;text-align:center;color:#dc2626;font-weight:600;">
+              ${s.absent || 0}
+            </td>
+            <td style="padding:10px 14px;text-align:center;color:#d97706;font-weight:600;">
+              ${s.late || 0}
+            </td>
+            <td style="padding:10px 14px;min-width:160px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="flex:1;height:8px;background:#e2e8f0;
+                            border-radius:20px;overflow:hidden;">
+                  <div style="width:${pct}%;height:100%;background:${barColor};
+                              border-radius:20px;"></div>
+                </div>
+                <span style="font-size:13px;font-weight:700;
+                             color:${barColor};min-width:42px;">
+                  ${pct}%
+                </span>
+              </div>
+              ${alert}
+            </td>
+          </tr>`;
+        }).join('');
+
+        const monthName = new Date(year, month - 1)
+          .toLocaleString('en', { month: 'long' });
+
+        document.getElementById('monthlyTable').innerHTML = `
+        <div style="padding:10px 14px;background:#f8fafc;
+                    border-bottom:1px solid #e8ecf0;font-size:13px;color:#1e2a3a;
+                    font-weight:600;">
+          ${monthName} ${year} — Monthly Attendance Summary
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <thead>
+            <tr style="background:#f8fafc;">
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#64748b;border-bottom:1px solid #e8ecf0;">Student</th>
+              <th style="padding:10px 14px;text-align:center;font-size:12px;
+                         color:#64748b;border-bottom:1px solid #e8ecf0;">Total Days</th>
+              <th style="padding:10px 14px;text-align:center;font-size:12px;
+                         color:#16a34a;border-bottom:1px solid #e8ecf0;">Present</th>
+              <th style="padding:10px 14px;text-align:center;font-size:12px;
+                         color:#dc2626;border-bottom:1px solid #e8ecf0;">Absent</th>
+              <th style="padding:10px 14px;text-align:center;font-size:12px;
+                         color:#d97706;border-bottom:1px solid #e8ecf0;">Late</th>
+              <th style="padding:10px 14px;text-align:left;font-size:12px;
+                         color:#64748b;border-bottom:1px solid #e8ecf0;">Attendance %</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      } catch (err) {
+        document.getElementById('monthlyTable').innerHTML =
+          `<div class="loading">${err.message}</div>`;
+      }
+    }
+
+    function handleLogout() {
+      removeToken();
+      window.location.href = 'login.html';
+    }
+
+    loadClassDropdowns().then(() => loadAttendance());
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classes — School Management</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>SchoolMS</h2><small>Admin Panel</small>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="students.html">Students</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="classes.html">Classes</a>
+        <a href="subjects.html">Subjects</a>
+        <a href="exams.html">Exams</a>
+        <a href="marks.html">Marks</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="fees.html">Fees</a>
+        <a href="notices.html">Notices</a>
+        <a href="timetable.html">Timetable</a>
+        <a href="promotion.html">Promotion</a>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="adminName">Admin</span>
+        <button class="btn-logout" onclick="handleLogout()">Logout</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <div class="page-header">
+        <h1>Classes</h1>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add Class</button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 id="classCount">All Classes</h2>
+        </div>
+        <div id="classesTable">
+          <div class="loading">Loading...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2 id="modalTitle">Add Class</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Class Name *</label>
+          <input type="text" id="fieldName" placeholder="e.g. Grade 1">
+        </div>
+        <div class="form-group">
+          <label>Section *</label>
+          <input type="text" id="fieldSection" placeholder="e.g. A">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Teacher</label>
+          <select id="fieldTeacher">
+            <option value="">— Select teacher —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Capacity</label>
+          <input type="number" id="fieldCapacity" value="40" min="1" max="200">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn" onclick="saveClass()">Save Class</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    requireAuth();
+    document.getElementById('adminName').textContent = localStorage.getItem('adminName') || 'Admin';
+    let editingId = null;
+
+    async function loadClasses() {
+      try {
+        const res = await ClassesAPI.getAll();
+        const classes = res.data;
+        document.getElementById('classCount').textContent = `All Classes (${classes.length})`;
+        if (!classes.length) {
+          document.getElementById('classesTable').innerHTML = '<div class="loading">No classes found.</div>';
+          return;
+        }
+        const rows = classes.map(c => `
+        <tr>
+          <td>${c.id}</td>
+          <td><strong>${c.name} - ${c.section}</strong></td>
+          <td>${c.teacher_name || '—'}</td>
+          <td>${c.student_count} / ${c.capacity}</td>
+          <td>
+            <button class="btn btn-sm btn-edit"   onclick="openEditModal(${c.id})">Edit</button>
+            <button class="btn btn-sm btn-delete" onclick="deleteClass(${c.id},'${c.name} ${c.section}')">Delete</button>
+          </td>
+        </tr>`).join('');
+        document.getElementById('classesTable').innerHTML = `
+        <table>
+          <thead><tr><th>#</th><th>Class</th><th>Teacher</th><th>Students</th><th>Actions</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      } catch (err) {
+        document.getElementById('classesTable').innerHTML = '<div class="loading">Failed to load.</div>';
+      }
+    }
+
+    async function loadTeacherOptions(selectedId = null) {
+      try {
+        const res = await TeachersAPI.getAll();
+        const opts = res.data.map(t =>
+          `<option value="${t.id}" ${t.id == selectedId ? 'selected' : ''}>${t.name}</option>`
+        ).join('');
+        document.getElementById('fieldTeacher').innerHTML =
+          '<option value="">— Select teacher —</option>' + opts;
+      } catch (err) { }
+    }
+
+    async function openAddModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'Add Class';
+      document.getElementById('saveBtn').textContent = 'Save Class';
+      document.getElementById('fieldName').value = '';
+      document.getElementById('fieldSection').value = '';
+      document.getElementById('fieldCapacity').value = '40';
+      await loadTeacherOptions();
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    async function openEditModal(id) {
+      editingId = id;
+      document.getElementById('modalTitle').textContent = 'Edit Class';
+      document.getElementById('saveBtn').textContent = 'Update Class';
+      try {
+        const res = await ClassesAPI.getOne(id);
+        const c = res.data;
+        document.getElementById('fieldName').value = c.name || '';
+        document.getElementById('fieldSection').value = c.section || '';
+        document.getElementById('fieldCapacity').value = c.capacity || 40;
+        await loadTeacherOptions(c.teacher_id);
+        document.getElementById('modalOverlay').classList.add('open');
+      } catch (err) { showToast('Failed to load class', 'error'); }
+    }
+
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+    async function saveClass() {
+      const name = document.getElementById('fieldName').value.trim();
+      const section = document.getElementById('fieldSection').value.trim();
+      const teacher_id = document.getElementById('fieldTeacher').value;
+      const capacity = document.getElementById('fieldCapacity').value;
+      if (!name || !section) { showToast('Name and section are required', 'error'); return; }
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      try {
+        if (editingId) {
+          await ClassesAPI.update(editingId, { name, section, teacher_id, capacity });
+          showToast('Class updated');
+        } else {
+          await ClassesAPI.create({ name, section, teacher_id, capacity });
+          showToast('Class added');
+        }
+        closeModal(); loadClasses();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = editingId ? 'Update Class' : 'Save Class';
+      }
+    }
+
+    async function deleteClass(id, name) {
+      if (!confirm(`Delete class "${name}"? Students in this class will be unassigned.`)) return;
+      try {
+        await ClassesAPI.delete(id); showToast('Class deleted'); loadClasses();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    function handleLogout() { removeToken(); window.location.href = 'login.html'; }
+    document.getElementById('modalOverlay').addEventListener('click', function (e) {
+      if (e.target === this) closeModal();
+    });
+    loadClasses();
+  </script>
+</body>
+
+</html>

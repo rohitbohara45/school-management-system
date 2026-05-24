@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Students — SchoolMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .student-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #e0e7ff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #4f46e5;
+      flex-shrink: 0;
+    }
+    .student-avatar img {
+      width: 100%; height: 100%;
+      border-radius: 50%; object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><h2>SchoolMS</h2><small>Admin Panel</small></div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="students.html" class="active">Students</a>
+      <a href="teachers.html">Teachers</a>
+      <a href="classes.html">Classes</a>
+      <a href="subjects.html">Subjects</a>
+      <a href="exams.html">Exams</a>
+      <a href="marks.html">Marks</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="fees.html">Fees</a>
+      <a href="notices.html">Notices</a>
+      <a href="timetable.html">Timetable</a>
+      <a href="promotion.html">Promotion</a>
+    </nav>
+    <div class="sidebar-footer">
+      <span id="adminName">Admin</span>
+      <button class="btn-logout" onclick="handleLogout()">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <!-- List panel -->
+    <div id="panelList">
+      <div class="page-header">
+        <h1>Students</h1>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add Student</button>
+      </div>
+
+      <div class="card mb-3" style="padding:14px 16px;">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="searchInput" placeholder="Search by name or email..."
+            style="padding:7px 12px;border:1px solid #d1d5db;border-radius:7px;
+                   font-size:13px;width:220px;"
+            oninput="filterStudents(this.value)">
+          <select id="classFilter" onchange="loadStudents()"
+            style="padding:7px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+            <option value="">All Classes</option>
+          </select>
+          <span id="studentCount" style="font-size:13px;color:#64748b;margin-left:auto;"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="studentsTableContainer">
+          <div class="loading">Loading students...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile panel -->
+    <div id="panelProfile" style="display:none;">
+      <div class="page-header">
+        <h1 id="profileTitle">Student Profile</h1>
+        <button class="btn" style="background:#f1f5f9;border:1px solid #e2e8f0;"
+          onclick="showPanel('list')">
+          ← Back to Students
+        </button>
+      </div>
+      <div id="profileContainer">
+        <div class="loading">Loading profile...</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" style="width:560px;max-width:96vw;">
+    <h2 id="modalTitle">Add Student</h2>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input type="text" id="fieldName" placeholder="e.g. Ravi Kumar">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="fieldEmail" placeholder="student@example.com">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" id="fieldPhone" placeholder="98XXXXXXXX">
+      </div>
+      <div class="form-group">
+        <label>Date of Birth</label>
+        <input type="date" id="fieldDob">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Parent/Guardian Name</label>
+        <input type="text" id="fieldParent" placeholder="Parent full name">
+      </div>
+      <div class="form-group">
+        <label>Admission Date</label>
+        <input type="date" id="fieldAdmission">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Class</label>
+        <select id="fieldClass">
+          <option value="">— Select class —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" id="fieldAddress" placeholder="City, District">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveStudent()">
+        Save Student
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('adminName').textContent =
+    localStorage.getItem('adminName') || 'Admin';
+
+  let allStudents = [];
+  let editingId   = null;
+
+  function showPanel(name) {
+    document.getElementById('panelList').style.display    = name === 'list' ? '' : 'none';
+    document.getElementById('panelProfile').style.display = name === 'profile' ? '' : 'none';
+  }
+
+  // ── Load students ─────────────────────────────────────────
+  async function loadStudents() {
+    try {
+      const res      = await StudentsAPI.getAll();
+      allStudents    = res.data;
+      document.getElementById('studentCount').textContent =
+        `${res.pagination.total} student(s)`;
+      renderTable(allStudents);
+      await loadClassDropdown();
+    } catch (err) {
+      document.getElementById('studentsTableContainer').innerHTML =
+        '<div class="loading">Failed to load students.</div>';
+    }
+  }
+
+  async function loadClassDropdown() {
+    try {
+      const res  = await ClassesAPI.getAll();
+      const opts = res.data.map(c =>
+        `<option value="${c.id}">${c.name} - ${c.section}</option>`
+      ).join('');
+      document.getElementById('classFilter').innerHTML =
+        '<option value="">All Classes</option>' + opts;
+    } catch (err) {}
+  }
+
+  function renderTable(students) {
+    if (!students.length) {
+      document.getElementById('studentsTableContainer').innerHTML =
+        '<div class="loading">No students found.</div>';
+      return;
+    }
+
+    const rows = students.map(s => {
+      const initials = s.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      const avatar   = s.photo_url
+        ? `<img src="http://localhost:5000${s.photo_url}" alt="${s.name}">`
+        : initials;
+
+      return `<tr>
+        <td style="padding:10px 16px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="student-avatar">${avatar}</div>
+            <div>
+              <div style="font-weight:500;">${s.name}</div>
+              <div style="font-size:11px;color:#94a3b8;">${s.email || '—'}</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:10px 16px;font-size:13px;color:#64748b;">
+          ${s.phone || '—'}
+        </td>
+        <td style="padding:10px 16px;font-size:13px;">
+          ${s.class_name ? s.class_name + ' ' + s.class_section : '—'}
+        </td>
+        <td style="padding:10px 16px;font-size:13px;color:#64748b;">
+          ${s.parent_name || '—'}
+        </td>
+        <td style="padding:10px 16px;">
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button class="btn btn-sm"
+              style="background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;
+                     font-size:11px;"
+              onclick="viewProfile(${s.id}, '${s.name}')">
+              <i class="bi bi-person"></i> Profile
+            </button>
+            <button class="btn btn-sm btn-edit" onclick="openEditModal(${s.id})">
+              Edit
+            </button>
+            <button class="btn btn-sm btn-delete"
+              onclick="deleteStudent(${s.id}, '${s.name}')">
+              Delete
+            </button>
+            <button class="btn btn-sm"
+              style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;
+                     font-size:11px;"
+              onclick="selectReportCard(${s.id}, '${s.name}')">
+              Report
+            </button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('studentsTableContainer').innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <thead>
+          <tr style="background:#f8fafc;">
+            <th style="padding:10px 16px;text-align:left;font-size:12px;color:#64748b;
+                       font-weight:600;border-bottom:1px solid #e8ecf0;">Student</th>
+            <th style="padding:10px 16px;text-align:left;font-size:12px;color:#64748b;
+                       font-weight:600;border-bottom:1px solid #e8ecf0;">Phone</th>
+            <th style="padding:10px 16px;text-align:left;font-size:12px;color:#64748b;
+                       font-weight:600;border-bottom:1px solid #e8ecf0;">Class</th>
+            <th style="padding:10px 16px;text-align:left;font-size:12px;color:#64748b;
+                       font-weight:600;border-bottom:1px solid #e8ecf0;">Parent</th>
+            <th style="padding:10px 16px;text-align:left;font-size:12px;color:#64748b;
+                       font-weight:600;border-bottom:1px solid #e8ecf0;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function filterStudents(query) {
+    const filtered = allStudents.filter(s =>
+      s.name.toLowerCase().includes(query.toLowerCase()) ||
+      (s.email || '').toLowerCase().includes(query.toLowerCase())
+    );
+    renderTable(filtered);
+  }
+
+  // ── Student profile ───────────────────────────────────────
+  async function viewProfile(studentId, name) {
+    document.getElementById('profileTitle').textContent = name;
+    showPanel('profile');
+    document.getElementById('profileContainer').innerHTML =
+      '<div class="loading">Loading profile...</div>';
+
+    try {
+      const res     = await apiRequest(`/students/${studentId}/profile`);
+      const profile = res.data;
+      renderProfile(profile);
+    } catch (err) {
+      document.getElementById('profileContainer').innerHTML =
+        `<div class="loading">${err.message}</div>`;
+    }
+  }
+
+  function renderProfile({ student, attendance, attSummary,
+                            marks, fees, feeSummary }) {
+    const initials = student.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    const photoHtml = student.photo_url
+      ? `<img src="http://localhost:5000${student.photo_url}"
+             style="width:100%;height:100%;object-fit:cover;">`
+      : `<span style="font-size:36px;font-weight:700;color:#fff;">${initials}</span>`;
+
+    // Group marks by exam
+    const examGroups = {};
+    marks.forEach(m => {
+      if (!examGroups[m.exam_name]) examGroups[m.exam_name] = [];
+      examGroups[m.exam_name].push(m);
+    });
+
+    const marksHtml = Object.entries(examGroups).map(([examName, examMarks]) => {
+      const total    = examMarks.filter(m => !m.is_absent)
+        .reduce((s, m) => s + m.marks_obtained, 0);
+      const full     = examMarks.filter(m => !m.is_absent)
+        .reduce((s, m) => s + m.full_marks, 0);
+      const pct      = full > 0 ? Math.round((total / full) * 100) : 0;
+
+      const rows = examMarks.map(m => `
+        <tr>
+          <td style="padding:6px 12px;">${m.subject_name}</td>
+          <td style="padding:6px 12px;text-align:center;">
+            ${m.is_absent ? '<span style="color:#dc2626;">Absent</span>'
+              : m.marks_obtained + ' / ' + m.full_marks}
+          </td>
+          <td style="padding:6px 12px;text-align:center;">${m.percentage || 0}%</td>
+        </tr>`).join('');
+
+      return `
+        <div style="margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:600;color:#1e2a3a;
+                      padding:8px 12px;background:#f8fafc;border-radius:6px;
+                      margin-bottom:4px;display:flex;justify-content:space-between;">
+            <span>${examName}</span>
+            <span style="color:${pct >= 40 ? '#16a34a' : '#dc2626'};">
+              ${pct}%
+            </span>
+          </div>
+          <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }).join('') || '<p style="color:#64748b;font-size:13px;">No marks recorded yet.</p>';
+
+    const feeRows = fees.slice(0, 6).map(f => `
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  padding:6px 0;border-bottom:1px solid #f1f5f9;">
+        <span style="font-size:13px;">${f.month} ${f.academic_year}</span>
+        <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;
+          background:${f.status === 'paid' ? '#f0fdf4' : '#fff5f5'};
+          color:${f.status === 'paid' ? '#16a34a' : '#dc2626'};">
+          ${f.status.toUpperCase()}
+        </span>
+      </div>`).join('');
+
+    const attRows = attendance.slice(0, 10).map(a => `
+      <div style="display:flex;justify-content:space-between;padding:5px 0;
+                  border-bottom:1px solid #f1f5f9;">
+        <span style="font-size:12px;color:#64748b;">
+          ${new Date(a.att_date).toLocaleDateString('en-GB', {
+            weekday:'short', day:'numeric', month:'short'
+          })}
+        </span>
+        <span class="badge badge-${a.status}">${a.status}</span>
+      </div>`).join('');
+
+    document.getElementById('profileContainer').innerHTML = `
+      <div class="row g-3">
+
+        <!-- Left: Student card -->
+        <div class="col-md-4">
+          <div class="card" style="padding:24px;text-align:center;">
+
+            <!-- Photo -->
+            <div style="width:100px;height:100px;border-radius:50%;
+                        background:#2563eb;margin:0 auto 12px;
+                        display:flex;align-items:center;justify-content:center;
+                        overflow:hidden;position:relative;">
+              ${photoHtml}
+            </div>
+
+            <!-- Upload photo -->
+            <label style="font-size:12px;color:#2563eb;cursor:pointer;
+                          display:block;margin-bottom:16px;">
+              <i class="bi bi-camera"></i> Change Photo
+              <input type="file" accept="image/*" style="display:none;"
+                onchange="uploadPhoto(${student.id}, this)">
+            </label>
+
+            <h3 style="font-size:18px;font-weight:700;margin-bottom:4px;">
+              ${student.name}
+            </h3>
+            <p style="font-size:13px;color:#64748b;margin-bottom:16px;">
+              ${student.class_name
+                ? student.class_name + ' — Section ' + student.class_section
+                : 'No class assigned'}
+            </p>
+
+            <div style="text-align:left;font-size:13px;border-top:1px solid #f1f5f9;
+                        padding-top:14px;">
+              <div style="margin-bottom:8px;">
+                <span style="color:#94a3b8;">Email</span><br>
+                <strong>${student.email || '—'}</strong>
+              </div>
+              <div style="margin-bottom:8px;">
+                <span style="color:#94a3b8;">Phone</span><br>
+                <strong>${student.phone || '—'}</strong>
+              </div>
+              <div style="margin-bottom:8px;">
+                <span style="color:#94a3b8;">Date of Birth</span><br>
+                <strong>${student.dob
+                  ? new Date(student.dob).toLocaleDateString('en-GB')
+                  : '—'}</strong>
+              </div>
+              <div style="margin-bottom:8px;">
+                <span style="color:#94a3b8;">Parent/Guardian</span><br>
+                <strong>${student.parent_name || '—'}</strong>
+              </div>
+              <div style="margin-bottom:8px;">
+                <span style="color:#94a3b8;">Address</span><br>
+                <strong>${student.address || '—'}</strong>
+              </div>
+              <div style="margin-bottom:8px;">
+                <span style="color:#94a3b8;">Admission Date</span><br>
+                <strong>${student.admission_date
+                  ? new Date(student.admission_date).toLocaleDateString('en-GB')
+                  : '—'}</strong>
+              </div>
+              <div style="margin-bottom:8px;">
+                <span style="color:#94a3b8;">Roll Number</span><br>
+                <strong>${String(student.id).padStart(4,'0')}</strong>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-sm w-100 mt-2"
+              onclick="openEditModal(${student.id}); showPanel('list')">
+              <i class="bi bi-pencil"></i> Edit Profile
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Stats -->
+        <div class="col-md-8">
+          <div class="row g-3 mb-3">
+            <div class="col-4">
+              <div class="card" style="padding:16px;text-align:center;">
+                <div style="font-size:24px;font-weight:700;color:#2563eb;">
+                  ${attSummary.percentage}%
+                </div>
+                <div style="font-size:12px;color:#64748b;">Attendance</div>
+                <div style="font-size:11px;color:#94a3b8;">
+                  ${attSummary.present || 0}/${attSummary.total || 0} days
+                </div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="card" style="padding:16px;text-align:center;">
+                <div style="font-size:24px;font-weight:700;
+                            color:${feeSummary.due > 0 ? '#dc2626' : '#16a34a'};">
+                  ${feeSummary.due}
+                </div>
+                <div style="font-size:12px;color:#64748b;">Fees Due</div>
+                <div style="font-size:11px;color:#94a3b8;">
+                  Rs. ${feeSummary.dueAmount.toFixed(0)}
+                </div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="card" style="padding:16px;text-align:center;">
+                <div style="font-size:24px;font-weight:700;color:#7c3aed;">
+                  ${marks.length}
+                </div>
+                <div style="font-size:12px;color:#64748b;">Mark Records</div>
+                <div style="font-size:11px;color:#94a3b8;">across all exams</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Marks -->
+          <div class="card mb-3" style="padding:16px;">
+            <h6 style="font-weight:700;margin-bottom:12px;">Academic Records</h6>
+            ${marksHtml}
+          </div>
+
+          <!-- Attendance + Fees side by side -->
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="card" style="padding:16px;">
+                <h6 style="font-weight:700;margin-bottom:10px;">Recent Attendance</h6>
+                ${attRows || '<p style="font-size:13px;color:#64748b;">No records yet.</p>'}
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="card" style="padding:16px;">
+                <h6 style="font-weight:700;margin-bottom:10px;">Fee Status</h6>
+                ${feeRows || '<p style="font-size:13px;color:#64748b;">No records yet.</p>'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>`;
+  }
+
+  // ── Photo upload ──────────────────────────────────────────
+  async function uploadPhoto(studentId, input) {
+    if (!input.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('photo', input.files[0]);
+
+    try {
+      const token = getToken();
+      const res   = await fetch(
+        `http://localhost:5000/api/students/${studentId}/photo`,
+        {
+          method:  'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body:    formData
+        }
+      );
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      showToast('Photo updated');
+      viewProfile(studentId, document.getElementById('profileTitle').textContent);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  // ── Add/Edit modal ────────────────────────────────────────
+  async function loadClassOptions(selectedId = null) {
+    try {
+      const res  = await ClassesAPI.getAll();
+      const opts = res.data.map(c =>
+        `<option value="${c.id}" ${c.id == selectedId ? 'selected' : ''}>
+          ${c.name} - ${c.section}
+        </option>`
+      ).join('');
+      document.getElementById('fieldClass').innerHTML =
+        '<option value="">— Select class —</option>' + opts;
+    } catch (err) {}
+  }
+
+  async function openAddModal() {
+    editingId = null;
+    document.getElementById('modalTitle').textContent = 'Add Student';
+    document.getElementById('saveBtn').textContent    = 'Save Student';
+    ['fieldName','fieldEmail','fieldPhone','fieldDob',
+     'fieldParent','fieldAddress','fieldAdmission'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    await loadClassOptions();
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  async function openEditModal(id) {
+    editingId = id;
+    document.getElementById('modalTitle').textContent = 'Edit Student';
+    document.getElementById('saveBtn').textContent    = 'Update Student';
+    try {
+      const res = await StudentsAPI.getOne(id);
+      const s   = res.data;
+      await loadClassOptions(s.class_id);
+      document.getElementById('fieldName').value      = s.name       || '';
+      document.getElementById('fieldEmail').value     = s.email      || '';
+      document.getElementById('fieldPhone').value     = s.phone      || '';
+      document.getElementById('fieldDob').value       = s.dob
+        ? new Date(s.dob).toISOString().split('T')[0] : '';
+      document.getElementById('fieldParent').value    = s.parent_name || '';
+      document.getElementById('fieldAddress').value   = s.address    || '';
+      document.getElementById('fieldAdmission').value = s.admission_date
+        ? new Date(s.admission_date).toISOString().split('T')[0] : '';
+      document.getElementById('modalOverlay').classList.add('open');
+    } catch (err) {
+      showToast('Failed to load student', 'error');
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  async function saveStudent() {
+    const name          = document.getElementById('fieldName').value.trim();
+    const email         = document.getElementById('fieldEmail').value.trim();
+    const phone         = document.getElementById('fieldPhone').value.trim();
+    const dob           = document.getElementById('fieldDob').value;
+    const class_id      = document.getElementById('fieldClass').value;
+    const parent_name   = document.getElementById('fieldParent').value.trim();
+    const address       = document.getElementById('fieldAddress').value.trim();
+    const admission_date = document.getElementById('fieldAdmission').value;
+
+    if (!name) { showToast('Name is required', 'error'); return; }
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Saving...';
+
+    try {
+      if (editingId) {
+        await StudentsAPI.update(editingId, {
+          name, email, phone, dob, class_id,
+          parent_name, address, admission_date
+        });
+        showToast('Student updated');
+      } else {
+        await StudentsAPI.create({
+          name, email, phone, dob, class_id,
+          parent_name, address, admission_date
+        });
+        showToast('Student added');
+      }
+      closeModal();
+      loadStudents();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = editingId ? 'Update Student' : 'Save Student';
+    }
+  }
+
+  async function deleteStudent(id, name) {
+    if (!confirm(`Delete student "${name}"? This cannot be undone.`)) return;
+    try {
+      await StudentsAPI.delete(id);
+      showToast('Student deleted');
+      loadStudents();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  // ── Report card picker ────────────────────────────────────
+  async function selectReportCard(studentId, name) {
+    try {
+      const studentRes = await StudentsAPI.getOne(studentId);
+      const classId    = studentRes.data.class_id;
+      if (!classId) { showToast('No class assigned', 'error'); return; }
+
+      const examsRes = await ExamsAPI.getAll(classId);
+      const exams    = examsRes.data;
+      if (!exams.length) { showToast('No exams for this class', 'error'); return; }
+
+      const options = exams.map(e =>
+        `<option value="${e.id}">${e.name} (${e.academic_year})</option>`
+      ).join('');
+
+      const picker = document.createElement('div');
+      picker.innerHTML = `
+        <div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);
+                    display:flex;align-items:center;justify-content:center;z-index:2000;">
+          <div style="background:#fff;border-radius:12px;padding:28px;width:360px;">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">
+              Report Card — ${name}
+            </h3>
+            <select id="examPicker"
+              style="width:100%;padding:9px 12px;border:1px solid #d1d5db;
+                     border-radius:7px;font-size:14px;margin-bottom:16px;">
+              ${options}
+            </select>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+              <button onclick="this.closest('div[style]').remove()"
+                style="padding:8px 14px;background:#f1f5f9;border:1px solid #e2e8f0;
+                       border-radius:7px;cursor:pointer;font-size:13px;">
+                Cancel
+              </button>
+              <button id="pdfBtn"
+                style="padding:8px 14px;background:#2563eb;color:#fff;border:none;
+                       border-radius:7px;cursor:pointer;font-size:13px;">
+                Download PDF
+              </button>
+              <button id="emailBtn"
+                style="padding:8px 14px;background:#16a34a;color:#fff;border:none;
+                       border-radius:7px;cursor:pointer;font-size:13px;">
+                Email
+              </button>
+            </div>
+          </div>
+        </div>`;
+
+      document.body.appendChild(picker);
+
+      document.getElementById('pdfBtn').onclick = () => {
+        const examId   = document.getElementById('examPicker').value;
+        const examName = document.getElementById('examPicker')
+          .selectedOptions[0].text;
+        picker.remove();
+        ReportsAPI.downloadReportCard(studentId, examId, name, examName);
+      };
+
+      document.getElementById('emailBtn').onclick = async () => {
+        const examId = document.getElementById('examPicker').value;
+        picker.remove();
+        try {
+          await ReportsAPI.emailReportCard(studentId, examId);
+          showToast(`Report card emailed`);
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      };
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  function handleLogout() {
+    removeToken();
+    window.location.href = 'login.html';
+  }
+
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  loadStudents();
+</script>
+</body>
+</html>

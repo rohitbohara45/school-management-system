@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Portal — SchoolMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            background: #f0f2f5;
+        }
+
+        .teacher-nav {
+            background: #1e2a3a;
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .teacher-nav .brand {
+            color: #fff;
+            font-weight: 700;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .teacher-nav .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .teacher-nav .teacher-name {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .btn-logout-sm {
+            background: none;
+            border: 1px solid rgba(229, 115, 115, 0.4);
+            color: #e57373;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout-sm:hover {
+            background: rgba(229, 115, 115, 0.1);
+        }
+
+        .main {
+            padding: 28px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .page-tabs {
+            display: flex;
+            gap: 4px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 6px;
+            border: 1px solid #e8ecf0;
+            margin-bottom: 24px;
+            width: fit-content;
+        }
+
+        .page-tab {
+            padding: 8px 20px;
+            border-radius: 7px;
+            border: none;
+            background: none;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-tab.active {
+            background: #0f6e56;
+            color: #fff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .profile-card {
+            background: linear-gradient(135deg, #0f2027, #0f6e56);
+            border-radius: 14px;
+            padding: 28px;
+            color: #fff;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .profile-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #1D9E75;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .profile-info h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .profile-info p {
+            font-size: 13px;
+            color: #9FE1CB;
+            margin: 0;
+        }
+
+        .profile-badges {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .profile-badge {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 10px 16px;
+            text-align: center;
+        }
+
+        .profile-badge .v {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .profile-badge .l {
+            font-size: 11px;
+            color: #9FE1CB;
+        }
+
+        .class-card {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #e8ecf0;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .class-card:hover {
+            border-color: #0f6e56;
+            box-shadow: 0 4px 16px rgba(15, 110, 86, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .class-card.selected {
+            border-color: #0f6e56;
+            background: #e1f5ee;
+        }
+
+        .class-card h5 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e2a3a;
+            margin-bottom: 4px;
+        }
+
+        .class-card p {
+            font-size: 13px;
+            color: #64748b;
+            margin: 0;
+        }
+
+        .summary-card {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #e8ecf0;
+            padding: 20px;
+        }
+
+        .summary-card .label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 6px;
+        }
+
+        .summary-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e2a3a;
+        }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .grade-Aplus {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .grade-A {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .grade-B {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .grade-C {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .grade-D {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+
+        .grade-F {
+            background: #fff5f5;
+            color: #dc2626;
+        }
+
+        .pwd-card {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #e8ecf0;
+            padding: 24px;
+            max-width: 440px;
+        }
+
+        .no-class-msg {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        @media (max-width: 640px) {
+            .profile-badges {
+                display: none;
+            }
+
+            .profile-card {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="teacher-nav">
+        <div class="brand">
+            <i class="bi bi-person-badge-fill" style="color:#9FE1CB"></i>
+            Teacher Portal
+        </div>
+        <div class="nav-right">
+            <span class="teacher-name" id="navName">Loading...</span>
+            <button class="btn-logout-sm" onclick="handleLogout()">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <div class="main">
+
+        <!-- Profile card -->
+        <div class="profile-card">
+            <div class="profile-avatar" id="avatarInitial">?</div>
+            <div class="profile-info">
+                <h2 id="profileName">Loading...</h2>
+                <p id="profileSubject">—</p>
+                <p id="profileEmail" style="margin-top:4px;">—</p>
+            </div>
+            <div class="profile-badges">
+                <div class="profile-badge">
+                    <div class="v" id="badgeClasses">—</div>
+                    <div class="l">Classes</div>
+                </div>
+                <div class="profile-badge">
+                    <div class="v" id="badgeStudents">—</div>
+                    <div class="l">Students</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="page-tabs">
+            <button class="page-tab active" onclick="switchTab('classes', this)">
+                <i class="bi bi-journal-text"></i> My Classes
+            </button>
+            <button class="page-tab" onclick="switchTab('attendance', this)">
+                <i class="bi bi-calendar-check"></i> Attendance
+            </button>
+            <button class="page-tab" onclick="switchTab('marks', this)">
+                <i class="bi bi-award"></i> Marks
+            </button>
+            <button class="page-tab" onclick="switchTab('settings', this)">
+                <i class="bi bi-gear"></i> Settings
+            </button>
+        </div>
+
+        <!-- My Classes tab -->
+        <div class="tab-content active" id="tab-classes">
+            <div id="classesGrid">
+                <div class="text-center py-4 text-muted">Loading classes...</div>
+            </div>
+
+            <!-- Students in selected class -->
+            <div id="studentsSection" style="display:none;margin-top:24px;">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between">
+                        <h6 class="mb-0 fw-bold" id="studentsTitle">Students</h6>
+                        <span class="badge bg-secondary" id="studentsCount">0</span>
+                    </div>
+                    <div id="studentsTable">
+                        <div class="text-center py-4 text-muted">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance tab -->
+        <div class="tab-content" id="tab-attendance">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <div class="d-flex gap-3 align-items-center flex-wrap">
+                        <h6 class="mb-0 fw-bold">Mark Attendance</h6>
+                        <select id="attClassSelect" onchange="loadAttendanceForClass()"
+                            style="padding:6px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+                            <option value="">— Select class —</option>
+                        </select>
+                        <input type="date" id="attDate"
+                            style="padding:6px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+                        <button class="btn btn-sm"
+                            style="background:#0f6e56;color:#fff;border-radius:7px;padding:6px 16px;font-size:13px;"
+                            onclick="loadAttendanceForClass()">
+                            Load
+                        </button>
+                        <button class="btn btn-sm"
+                            style="background:#1e2a3a;color:#fff;border-radius:7px;padding:6px 16px;font-size:13px;"
+                            id="saveAttBtn" onclick="saveAttendance()">
+                            Save All
+                        </button>
+                    </div>
+                </div>
+                <div id="attTableContainer">
+                    <div class="text-center py-4 text-muted">Select a class and date to begin.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marks tab -->
+        <div class="tab-content" id="tab-marks">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <div class="d-flex gap-3 align-items-center flex-wrap">
+                        <h6 class="mb-0 fw-bold">Student Marks</h6>
+                        <select id="marksClassSelect" onchange="loadMarksForClass()"
+                            style="padding:6px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+                            <option value="">— Select class —</option>
+                        </select>
+                        <select id="marksTermSelect" onchange="loadMarksForClass()"
+                            style="padding:6px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+                            <option value="">All Terms</option>
+                            <option value="Term 1">Term 1</option>
+                            <option value="Term 2">Term 2</option>
+                            <option value="Term 3">Term 3</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="marksTableContainer">
+                    <div class="text-center py-4 text-muted">Select a class to view marks.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings tab -->
+        <div class="tab-content" id="tab-settings">
+            <div class="pwd-card">
+                <h6 class="fw-bold mb-4">Change Password</h6>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size:13px;font-weight:500;">Current Password</label>
+                    <input type="password" class="form-control" id="curPwd" placeholder="Enter current password">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size:13px;font-weight:500;">New Password</label>
+                    <input type="password" class="form-control" id="newPwd" placeholder="Min. 6 characters">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size:13px;font-weight:500;">Confirm New Password</label>
+                    <input type="password" class="form-control" id="conPwd" placeholder="Repeat new password">
+                </div>
+                <button class="btn w-100" style="background:#0f6e56;color:#fff;border-radius:7px;"
+                    onclick="changePwd()">
+                    Update Password
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // ── Self-contained auth ───────────────────────────────────
+        const TEACHER_TOKEN = localStorage.getItem('teacherToken');
+        const TAPI = 'http://localhost:5000/api';
+
+        if (!TEACHER_TOKEN) {
+            window.location.href = 'login.html';
+        }
+
+        // ── Helper: fetch with teacher token ──────────────────────
+        async function tGet(endpoint) {
+            const res = await fetch(`${TAPI}${endpoint}`, {
+                headers: { 'Authorization': `Bearer ${TEACHER_TOKEN}` }
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Request failed');
+            return data;
+        }
+
+        async function tPost(endpoint, body) {
+            const res = await fetch(`${TAPI}${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${TEACHER_TOKEN}`
+                },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Request failed');
+            return data;
+        }
+
+        async function tPut(endpoint, body) {
+            const res = await fetch(`${TAPI}${endpoint}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${TEACHER_TOKEN}`
+                },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Request failed');
+            return data;
+        }
+
+        // ── Toast ─────────────────────────────────────────────────
+        function toast(msg, type = 'success') {
+            let el = document.getElementById('toast');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'toast';
+                el.style.cssText = `
+        position:fixed;top:20px;right:20px;padding:12px 20px;
+        border-radius:8px;font-size:14px;font-weight:500;z-index:9999;
+        opacity:0;transform:translateY(-10px);transition:all 0.3s;
+        pointer-events:none;font-family:'Segoe UI',sans-serif;`;
+                document.body.appendChild(el);
+            }
+            el.textContent = msg;
+            el.style.background = type === 'success' ? '#f0fdf4' : '#fff5f5';
+            el.style.color = type === 'success' ? '#16a34a' : '#dc2626';
+            el.style.border = `1px solid ${type === 'success' ? '#bbf7d0' : '#fecaca'}`;
+            setTimeout(() => {
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            }, 10);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-10px)';
+            }, 3000);
+        }
+
+        // ── Tab switching ─────────────────────────────────────────
+        function switchTab(name, btn) {
+            document.querySelectorAll('.tab-content')
+                .forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.page-tab')
+                .forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${name}`).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // ── State ─────────────────────────────────────────────────
+        let myClasses = [];
+        let selectedClassId = null;
+        let attendanceRecords = [];
+        const today = new Date().toISOString().split('T')[0];
+
+        document.getElementById('attDate').value = today;
+
+        const teacherData = JSON.parse(
+            localStorage.getItem('teacherData') || '{}'
+        );
+        document.getElementById('navName').textContent =
+            teacherData.name || 'Teacher';
+
+        // ── Load all on startup ───────────────────────────────────
+        async function loadAll() {
+            try {
+                const [meRes, classesRes] = await Promise.all([
+                    tGet('/teacher/me'),
+                    tGet('/teacher/classes')
+                ]);
+
+                myClasses = classesRes.data || [];
+
+                // Profile
+                const t = meRes.data;
+                const initials = t.name
+                    ? t.name.split(' ').map(n => n[0]).join('').toUpperCase()
+                    : '?';
+                document.getElementById('avatarInitial').textContent = initials;
+                document.getElementById('profileName').textContent = t.name || '—';
+                document.getElementById('profileSubject').textContent =
+                    t.subject ? `Subject: ${t.subject}` : 'No subject assigned';
+                document.getElementById('profileEmail').textContent = t.email || '—';
+
+                const totalStudents = myClasses.reduce(
+                    (s, c) => s + (c.student_count || 0), 0
+                );
+                document.getElementById('badgeClasses').textContent = myClasses.length;
+                document.getElementById('badgeStudents').textContent = totalStudents;
+
+                renderClassCards();
+                populateClassDropdowns();
+
+            } catch (err) {
+                console.error('Teacher dashboard load error:', err);
+                document.getElementById('tab-classes').innerHTML = `
+        <div style="text-align:center;padding:40px;color:#dc2626;">
+          Error: ${err.message}<br><br>
+          <a href="login.html" style="color:#2563eb;">Login again</a>
+        </div>`;
+            }
+        }
+
+        // ── Classes tab ───────────────────────────────────────────
+        function renderClassCards() {
+            if (!myClasses.length) {
+                document.getElementById('classesGrid').innerHTML =
+                    '<div style="text-align:center;padding:40px;color:#64748b;">No classes assigned yet.</div>';
+                return;
+            }
+
+            const cards = myClasses.map(c => `
+      <div class="col-md-4">
+        <div class="class-card ${selectedClassId == c.id ? 'selected' : ''}"
+          onclick="selectClass(${c.id}, '${c.name} ${c.section}')">
+          <h5>${c.name} — ${c.section}</h5>
+          <p>${c.student_count} students | Capacity: ${c.capacity}</p>
+          <p style="margin-top:6px;font-size:12px;color:#0f6e56;font-weight:600;">
+            Click to view students
+          </p>
+        </div>
+      </div>`).join('');
+
+            document.getElementById('classesGrid').innerHTML =
+                `<div class="row g-3">${cards}</div>`;
+        }
+
+        async function selectClass(classId, className) {
+            selectedClassId = classId;
+            renderClassCards();
+
+            document.getElementById('studentsSection').style.display = 'block';
+            document.getElementById('studentsTitle').textContent =
+                `Students in ${className}`;
+            document.getElementById('studentsTable').innerHTML =
+                '<div style="padding:20px;text-align:center;color:#64748b;">Loading...</div>';
+
+            try {
+                const res = await tGet(`/teacher/classes/${classId}/students`);
+                const students = res.data || [];
+                document.getElementById('studentsCount').textContent = students.length;
+
+                if (!students.length) {
+                    document.getElementById('studentsTable').innerHTML =
+                        '<div style="padding:20px;text-align:center;color:#64748b;">No students.</div>';
+                    return;
+                }
+
+                const rows = students.map(s => `
+        <tr>
+          <td class="px-3 py-2"><strong>${s.name}</strong></td>
+          <td class="px-3 py-2" style="color:#64748b;">${s.email || '—'}</td>
+          <td class="px-3 py-2" style="color:#64748b;">${s.phone || '—'}</td>
+        </tr>`).join('');
+
+                document.getElementById('studentsTable').innerHTML = `
+        <table class="table table-sm mb-0" style="font-size:14px;">
+          <thead class="table-light">
+            <tr>
+              <th class="px-3 py-2">Name</th>
+              <th class="px-3 py-2">Email</th>
+              <th class="px-3 py-2">Phone</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+            } catch (err) {
+                document.getElementById('studentsTable').innerHTML =
+                    `<div style="padding:20px;color:#dc2626;">${err.message}</div>`;
+            }
+        }
+
+        // ── Attendance tab ────────────────────────────────────────
+        function populateClassDropdowns() {
+            const opts = myClasses.map(c =>
+                `<option value="${c.id}">${c.name} — ${c.section}</option>`
+            ).join('');
+            const ph = '<option value="">— Select class —</option>';
+
+            const attSel = document.getElementById('attClassSelect');
+            const marksSel = document.getElementById('marksClassSelect');
+            if (attSel) attSel.innerHTML = ph + opts;
+            if (marksSel) marksSel.innerHTML = ph + opts;
+        }
+
+        async function loadAttendanceForClass() {
+            const classId = document.getElementById('attClassSelect').value;
+            const date = document.getElementById('attDate').value;
+
+            if (!classId) {
+                document.getElementById('attTableContainer').innerHTML =
+                    '<div style="padding:24px;text-align:center;color:#64748b;">Select a class.</div>';
+                return;
+            }
+
+            document.getElementById('attTableContainer').innerHTML =
+                '<div style="padding:20px;text-align:center;color:#64748b;">Loading...</div>';
+
+            try {
+                const res = await tGet(
+                    `/teacher/attendance?class_id=${classId}&date=${date}`
+                );
+                attendanceRecords = res.data || [];
+                renderAttendanceTable(date);
+            } catch (err) {
+                document.getElementById('attTableContainer').innerHTML =
+                    `<div style="padding:20px;color:#dc2626;">${err.message}</div>`;
+            }
+        }
+
+        function renderAttendanceTable(date) {
+            if (!attendanceRecords.length) {
+                document.getElementById('attTableContainer').innerHTML =
+                    '<div style="padding:24px;text-align:center;color:#64748b;">No students.</div>';
+                return;
+            }
+
+            const present = attendanceRecords.filter(r => r.status === 'present').length;
+            const absent = attendanceRecords.filter(r => r.status === 'absent').length;
+            const late = attendanceRecords.filter(r => r.status === 'late').length;
+
+            const rows = attendanceRecords.map((r, i) => `
+      <tr>
+        <td class="px-3 py-2"><strong>${r.student_name}</strong></td>
+        <td class="px-3 py-2">
+          <select onchange="updateAttStatus(${i}, this.value)"
+            style="padding:5px 8px;border:1px solid #d1d5db;
+                   border-radius:5px;font-size:13px;">
+            <option value="present" ${r.status === 'present' ? 'selected' : ''}>Present</option>
+            <option value="absent"  ${r.status === 'absent' ? 'selected' : ''}>Absent</option>
+            <option value="late"    ${r.status === 'late' ? 'selected' : ''}>Late</option>
+          </select>
+        </td>
+      </tr>`).join('');
+
+            document.getElementById('attTableContainer').innerHTML = `
+      <div style="padding:10px 16px;background:#f8fafc;border-bottom:1px solid #e8ecf0;
+                  font-size:13px;color:#64748b;" id="attSummaryBar">
+        ${date} | Present: ${present} | Absent: ${absent} | Late: ${late}
+      </div>
+      <table class="table table-sm mb-0" style="font-size:14px;">
+        <thead class="table-light">
+          <tr>
+            <th class="px-3 py-2">Student</th>
+            <th class="px-3 py-2">Status</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+        }
+
+        function updateAttStatus(index, status) {
+            attendanceRecords[index].status = status;
+            const date = document.getElementById('attDate').value;
+            const present = attendanceRecords.filter(r => r.status === 'present').length;
+            const absent = attendanceRecords.filter(r => r.status === 'absent').length;
+            const late = attendanceRecords.filter(r => r.status === 'late').length;
+            const bar = document.getElementById('attSummaryBar');
+            if (bar) {
+                bar.textContent =
+                    `${date} | Present: ${present} | Absent: ${absent} | Late: ${late}`;
+            }
+        }
+
+        async function saveAttendance() {
+            const classId = document.getElementById('attClassSelect').value;
+            const date = document.getElementById('attDate').value;
+
+            if (!classId || !attendanceRecords.length) {
+                toast('Load attendance first', 'error'); return;
+            }
+
+            const btn = document.getElementById('saveAttBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                const records = attendanceRecords.map(r => ({
+                    student_id: r.student_id, status: r.status
+                }));
+                await tPost('/teacher/attendance', {
+                    date, class_id: classId, records
+                });
+                toast(`Attendance saved for ${records.length} students`);
+            } catch (err) {
+                toast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save All';
+            }
+        }
+
+        // ── Marks tab ─────────────────────────────────────────────
+        async function loadMarksForClass() {
+            const classId = document.getElementById('marksClassSelect').value;
+            const term = document.getElementById('marksTermSelect').value;
+
+            if (!classId) {
+                document.getElementById('marksTableContainer').innerHTML =
+                    '<div style="padding:24px;text-align:center;color:#64748b;">Select a class.</div>';
+                return;
+            }
+
+            document.getElementById('marksTableContainer').innerHTML =
+                '<div style="padding:20px;text-align:center;color:#64748b;">Loading...</div>';
+
+            try {
+                const url = `/teacher/marks?class_id=${classId}${term ? '&term=' + term : ''}`;
+                const res = await tGet(url);
+                const marks = res.data || [];
+
+                if (!marks.length) {
+                    document.getElementById('marksTableContainer').innerHTML =
+                        '<div style="padding:24px;text-align:center;color:#64748b;">No marks yet.</div>';
+                    return;
+                }
+
+                function getGrade(pct) {
+                    if (pct >= 90) return 'A+';
+                    if (pct >= 80) return 'A';
+                    if (pct >= 70) return 'B';
+                    if (pct >= 60) return 'C';
+                    if (pct >= 50) return 'D';
+                    return 'F';
+                }
+
+                const rows = marks.map(m => {
+                    const grade = m.grade || getGrade(m.percentage);
+                    const gc = {
+                        'A+': '#7c3aed', 'A': '#16a34a', 'B': '#2563eb',
+                        'C': '#d97706', 'D': '#ea580c', 'F': '#dc2626'
+                    };
+                    return `<tr>
+          <td class="px-3 py-2"><strong>${m.student_name}</strong></td>
+          <td class="px-3 py-2">${m.subject}</td>
+          <td class="px-3 py-2">${m.marks_obtained}/${m.total_marks}</td>
+          <td class="px-3 py-2">${m.percentage}%</td>
+          <td class="px-3 py-2">
+            <span style="padding:2px 8px;border-radius:20px;font-size:12px;
+                         font-weight:700;color:${gc[grade]};
+                         background:${gc[grade]}22;">${grade}</span>
+          </td>
+          <td class="px-3 py-2" style="color:#64748b;font-size:12px;">
+            ${m.term}
+          </td>
+        </tr>`;
+                }).join('');
+
+                document.getElementById('marksTableContainer').innerHTML = `
+        <table class="table table-sm mb-0" style="font-size:14px;">
+          <thead class="table-light">
+            <tr>
+              <th class="px-3 py-2">Student</th>
+              <th class="px-3 py-2">Subject</th>
+              <th class="px-3 py-2">Score</th>
+              <th class="px-3 py-2">%</th>
+              <th class="px-3 py-2">Grade</th>
+              <th class="px-3 py-2">Term</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+            } catch (err) {
+                document.getElementById('marksTableContainer').innerHTML =
+                    `<div style="padding:20px;color:#dc2626;">${err.message}</div>`;
+            }
+        }
+
+        // ── Settings tab ──────────────────────────────────────────
+        async function changePwd() {
+            const cur = document.getElementById('curPwd').value;
+            const nw = document.getElementById('newPwd').value;
+            const con = document.getElementById('conPwd').value;
+
+            if (!cur || !nw || !con) { toast('All fields required', 'error'); return; }
+            if (nw !== con) { toast('Passwords do not match', 'error'); return; }
+            if (nw.length < 6) { toast('Min 6 characters', 'error'); return; }
+
+            try {
+                await tPut('/teacher/change-password', {
+                    currentPassword: cur, newPassword: nw
+                });
+                toast('Password changed');
+                document.getElementById('curPwd').value = '';
+                document.getElementById('newPwd').value = '';
+                document.getElementById('conPwd').value = '';
+            } catch (err) {
+                toast(err.message, 'error');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('teacherToken');
+            localStorage.removeItem('teacherName');
+            localStorage.removeItem('teacherData');
+            window.location.href = 'login.html';
+        }
+
+        // ── Start ─────────────────────────────────────────────────
+        loadAll();
+    </script>
+</body>
+
+</html>

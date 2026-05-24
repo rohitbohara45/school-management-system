@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Management System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #1e2a3a;
+      --blue: #2563eb;
+      --teal: #0f9b77;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      color: #333;
+    }
+
+    /* ── Navbar ───────────────────────────────────────── */
+    .navbar {
+      background: var(--navy);
+      padding: 0 40px;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .navbar-brand {
+      color: #fff !important;
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .navbar-brand .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--blue);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .nav-link {
+      color: #94a3b8 !important;
+      font-size: 14px;
+      padding: 0 16px !important;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover {
+      color: #fff !important;
+    }
+
+    .btn-login {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 7px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-login:hover {
+      background: #1d4ed8;
+      color: #fff;
+    }
+
+    /* ── Hero ─────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, #1a3a5c 60%, #0f4c75 100%);
+      color: #fff;
+      padding: 100px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .hero-title {
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .hero-title span {
+      color: #60a5fa;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: #94a3b8;
+      margin-bottom: 36px;
+      max-width: 520px;
+      line-height: 1.7;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-hero-primary {
+      background: var(--blue);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-hero-primary:hover {
+      background: #1d4ed8;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .btn-hero-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-hero-secondary:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+    }
+
+    /* Hero stats */
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 52px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      border-left: 3px solid var(--blue);
+      padding-left: 14px;
+    }
+
+    .hero-stat .num {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .hero-stat .lbl {
+      font-size: 12px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Hero image / mockup card */
+    .hero-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 24px;
+      backdrop-filter: blur(4px);
+    }
+
+    .hero-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .mock-stat {
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .mock-stat .v {
+      font-size: 22px;
+      font-weight: 700;
+      color: #60a5fa;
+    }
+
+    .mock-stat .l {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .mock-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+
+    .mock-badge {
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .badge-green {
+      background: #1a4731;
+      color: #4ade80;
+    }
+
+    .badge-red {
+      background: #4a1919;
+      color: #f87171;
+    }
+
+    .badge-amber {
+      background: #43310a;
+      color: #fbbf24;
+    }
+
+    /* ── Features ─────────────────────────────────────── */
+    .features {
+      padding: 80px 0;
+      background: #f8fafc;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--blue);
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 14px;
+    }
+
+    .section-sub {
+      font-size: 16px;
+      color: #64748b;
+      max-width: 520px;
+      line-height: 1.7;
+    }
+
+    .feature-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px;
+      border: 1px solid #e8ecf0;
+      height: 100%;
+      transition: all 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      border-color: #bfdbfe;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* ── Modules ──────────────────────────────────────── */
+    .modules {
+      padding: 80px 0;
+      background: #fff;
+    }
+
+    .module-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #e8ecf0;
+      margin-bottom: 14px;
+      transition: all 0.2s;
+    }
+
+    .module-item:hover {
+      border-color: #bfdbfe;
+      background: #f8fafc;
+    }
+
+    .module-num {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      background: var(--navy);
+      color: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .module-item h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+
+    .module-item p {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0;
+    }
+
+    /* ── CTA ──────────────────────────────────────────── */
+    .cta-section {
+      background: var(--navy);
+      padding: 80px 0;
+      text-align: center;
+      color: #fff;
+    }
+
+    .cta-section h2 {
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .cta-section p {
+      font-size: 16px;
+      color: #94a3b8;
+      margin-bottom: 32px;
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+    footer {
+      background: #0f172a;
+      color: #64748b;
+      padding: 32px 0;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    footer a {
+      color: #94a3b8;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: #fff;
+    }
+
+    /* ── Announcement bar ─────────────────────────────── */
+    .announcement {
+      background: var(--blue);
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    .announcement a {
+      color: #bfdbfe;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 34px;
+      }
+
+      .hero-subtitle {
+        font-size: 15px;
+      }
+
+      .hero-stats {
+        gap: 20px;
+      }
+
+      .navbar {
+        padding: 0 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Announcement bar -->
+  <div class="announcement">
+    New: Student & Teacher login portals now available.
+    <a href="pages/login.html">Get started →</a>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <div class="logo-icon">🏫</div>
+        SchoolMS
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu"
+        style="border-color:rgba(255,255,255,0.2);">
+        <span class="navbar-toggler-icon" style="filter:invert(1)"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav me-auto ms-4">
+          <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+          <li class="nav-item"><a class="nav-link" href="#modules">Modules</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-3">
+          <a href="pages/login.html" style="color:#94a3b8;font-size:14px;text-decoration:none;">Sign in</a>
+          <a href="pages/login.html" class="btn-login">Admin Login →</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="row align-items-center g-5">
+
+        <div class="col-lg-6">
+          <div class="section-label">School Management System</div>
+          <h1 class="hero-title">
+            Manage your school<br><span>smarter and faster</span>
+          </h1>
+          <p class="hero-subtitle">
+            A complete web-based system for managing students, teachers,
+            classes, attendance, and marks — all in one place.
+          </p>
+          <div class="hero-btns">
+            <a href="pages/login.html" class="btn-hero-primary">
+              <i class="bi bi-box-arrow-in-right"></i> Admin Login
+            </a>
+            <a href="#features" class="btn-hero-secondary">
+              <i class="bi bi-play-circle"></i> See Features
+            </a>
+          </div>
+
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="num">6</div>
+              <div class="lbl">Modules</div>
+            </div>
+            <div class="hero-stat">
+              <div class="num">20+</div>
+              <div class="lbl">API Endpoints</div>
+            </div>
+            <div class="hero-stat">
+              <div class="num">100%</div>
+              <div class="lbl">Custom built</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard mockup card -->
+        <div class="col-lg-6">
+          <div class="hero-card">
+            <div class="hero-card-header">
+              <div class="dot" style="background:#ef4444"></div>
+              <div class="dot" style="background:#f59e0b"></div>
+              <div class="dot" style="background:#22c55e"></div>
+              <span style="font-size:12px;color:#64748b;margin-left:8px;">Dashboard</span>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-3">
+                <div class="mock-stat">
+                  <div class="v">124</div>
+                  <div class="l">Students</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="mock-stat">
+                  <div class="v">18</div>
+                  <div class="l">Teachers</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="mock-stat">
+                  <div class="v">12</div>
+                  <div class="l">Classes</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="mock-stat">
+                  <div class="v" style="color:#4ade80">87%</div>
+                  <div class="l">Present</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+              Recent Students
+            </div>
+            <div class="mock-row">
+              Ravi Kumar
+              <span class="mock-badge badge-green">Present</span>
+            </div>
+            <div class="mock-row">
+              Sita Sharma
+              <span class="mock-badge badge-red">Absent</span>
+            </div>
+            <div class="mock-row">
+              Hari Prasad
+              <span class="mock-badge badge-amber">Late</span>
+            </div>
+            <div class="mock-row">
+              Gita Thapa
+              <span class="mock-badge badge-green">Present</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="row mb-5">
+        <div class="col-lg-6">
+          <div class="section-label">Why SchoolMS</div>
+          <h2 class="section-title">Everything your school needs</h2>
+          <p class="section-sub">
+            Built from scratch with Node.js, Express, and MySQL.
+            No plugins. No black boxes. Full control.
+          </p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:#eff6ff;">🔐</div>
+            <h3>Secure Authentication</h3>
+            <p>JWT tokens, bcrypt password hashing, and rate-limited login protect every account.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:#f0fdf4;">📊</div>
+            <h3>Live Dashboard</h3>
+            <p>Real-time stats on students, teachers, classes, and today's attendance — all in one view.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:#fff7ed;">📋</div>
+            <h3>Attendance Tracking</h3>
+            <p>Mark present, absent, or late for every student. Bulk save for the whole class at once.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:#fdf4ff;">🎓</div>
+            <h3>Marks & Grades</h3>
+            <p>Record marks per subject and term. Auto-calculated grades from A+ to F shown instantly.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:#fff1f2;">👨‍🏫</div>
+            <h3>Teacher Management</h3>
+            <p>Add teachers, assign them to classes, and track how many classes each teacher handles.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:#ecfdf5;">🏫</div>
+            <h3>Class Management</h3>
+            <p>Create classes and sections, assign teachers, and monitor student capacity at a glance.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modules -->
+  <section class="modules" id="modules">
+    <div class="container">
+      <div class="row align-items-center g-5">
+
+        <div class="col-lg-5">
+          <div class="section-label">System Modules</div>
+          <h2 class="section-title">Built in 7 steps, ready for real use</h2>
+          <p class="section-sub">
+            Each module is fully connected — frontend talks to backend,
+            backend talks to MySQL. No dummy data, no mock APIs.
+          </p>
+          <a href="pages/login.html" class="btn-hero-primary mt-4" style="display:inline-flex;background:#1e2a3a;">
+            Open Admin Panel →
+          </a>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="module-item">
+            <div class="module-num">1</div>
+            <div>
+              <h4>Student Management</h4>
+              <p>Add, edit, delete, and search students. Assign to classes dynamically.</p>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-num">2</div>
+            <div>
+              <h4>Teacher Management</h4>
+              <p>Manage teacher profiles, subjects, and class assignments.</p>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-num">3</div>
+            <div>
+              <h4>Class & Section Management</h4>
+              <p>Create classes, assign teachers, track student counts vs capacity.</p>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-num">4</div>
+            <div>
+              <h4>Attendance System</h4>
+              <p>Daily attendance with present / absent / late. Bulk save for full class.</p>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-num">5</div>
+            <div>
+              <h4>Marks & Grades</h4>
+              <p>Record subject-wise marks per term. Auto grade calculation.</p>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-num">6</div>
+            <div>
+              <h4>Admin Dashboard</h4>
+              <p>Live counts, recent students, attendance percentage — updated in real time.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- About / CTA -->
+  <section class="cta-section" id="about">
+    <div class="container">
+      <h2>Ready to get started?</h2>
+      <p>Log in to the admin panel to manage your school data.</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="pages/login.html" class="btn-hero-primary">
+          <i class="bi bi-box-arrow-in-right"></i> Admin Login
+        </a>
+        <a href="pages/login.html" class="btn-hero-secondary">
+          <i class="bi bi-person"></i> Student Login
+        </a>
+        <a href="pages/login.html" class="btn-hero-secondary">
+          <i class="bi bi-person-badge"></i> Teacher Login
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-4 text-md-start text-center mb-2 mb-md-0">
+          <strong style="color:#94a3b8;">SchoolMS</strong> — Built with Node.js + MySQL
+        </div>
+        <div class="col-md-4 text-center mb-2 mb-md-0" style="color:#475569;">
+          &copy; 2024 School Management System
+        </div>
+        <div class="col-md-4 text-md-en

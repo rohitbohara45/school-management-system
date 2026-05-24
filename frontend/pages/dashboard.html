@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — School Management</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>SchoolMS</h2>
+        <small>Admin Panel</small>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="students.html">Students</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="classes.html">Classes</a>
+        <a href="subjects.html">Subjects</a>
+        <a href="exams.html">Exams</a>
+        <a href="marks.html">Marks</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="fees.html">Fees</a>
+        <a href="notices.html">Notices</a>
+        <a href="timetable.html">Timetable</a>
+        <a href="promotion.html">Promotion</a>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="adminName">Admin</span>
+        <button class="btn-logout" onclick="handleLogout()">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="label">Total Students</div>
+          <div class="value" id="statStudents">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Teachers</div>
+          <div class="value" id="statTeachers">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Classes</div>
+          <div class="value" id="statClasses">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Present Today</div>
+          <div class="value green" id="statAttendance">—</div>
+        </div>
+      </div>
+
+      <!-- Recent students table -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Recent Students</h2>
+          <a href="students.html" class="btn btn-primary btn-sm">Manage Students</a>
+        </div>
+        <div id="recentStudents">
+          <div class="loading">Loading...</div>
+        </div>
+      </div>
+      <!-- Change Password Card -->
+      <div class="card" style="margin-top:24px;max-width:480px;">
+        <div class="card-header">
+          <h2>Change Password</h2>
+        </div>
+        <div style="padding:20px;">
+          <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" id="currentPwd" placeholder="Enter current password">
+          </div>
+          <div class="form-group">
+            <label>New Password</label>
+            <input type="password" id="newPwd" placeholder="Min. 6 characters">
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" id="confirmPwd" placeholder="Repeat new password">
+          </div>
+          <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    requireAuth();
+    document.getElementById('adminName').textContent =
+      localStorage.getItem('adminName') || 'Admin';
+
+    async function loadDashboard() {
+      try {
+        // Load live stats from the single /api/stats endpoint
+        const statsRes = await fetch('http://localhost:5000/api/stats');
+        const stats = await statsRes.json();
+
+        if (stats.success) {
+          document.getElementById('statStudents').textContent = stats.data.students;
+          document.getElementById('statTeachers').textContent = stats.data.teachers;
+          document.getElementById('statClasses').textContent = stats.data.classes;
+          document.getElementById('statAttendance').textContent =
+            stats.data.attendanceToday + '%';
+        }
+
+        // Load recent students table
+        const studentsRes = await StudentsAPI.getAll();
+        const students = studentsRes.data.slice(0, 5);
+
+        const tbody = students.map(s => `
+        <tr>
+          <td>${s.name}</td>
+          <td>${s.class_name ? s.class_name + ' ' + s.class_section : '—'}</td>
+          <td>${s.email || '—'}</td>
+          <td><a href="students.html" class="btn btn-sm btn-edit">Manage</a></td>
+        </tr>
+      `).join('');
+
+        document.getElementById('recentStudents').innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th><th>Class</th><th>Email</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody>${tbody}</tbody>
+        </table>
+      `;
+      } catch (err) {
+        document.getElementById('recentStudents').innerHTML =
+          '<div class="loading">Failed to load dashboard data.</div>';
+      }
+    }
+
+    function handleLogout() {
+      removeToken();
+      window.location.href = 'login.html';
+    }
+
+    loadDashboard();
+
+    async function changePassword() {
+      const currentPassword = document.getElementById('currentPwd').value;
+      const newPassword = document.getElementById('newPwd').value;
+      const confirmPassword = document.getElementById('confirmPwd').value;
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        showToast('All fields are required', 'error');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showToast('New passwords do not match', 'error');
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        showToast('New password must be at least 6 characters', 'error');
+        return;
+      }
+
+      try {
+        await apiRequest('/auth/change-password', 'PUT', {
+          currentPassword,
+          newPassword
+        });
+        showToast('Password changed successfully');
+        // Clear the fields
+        document.getElementById('currentPwd').value = '';
+        document.getElementById('newPwd').value = '';
+        document.getElementById('confirmPwd').value = '';
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal — SchoolMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            background: #f0f2f5;
+        }
+
+        .student-nav {
+            background: #1e2a3a;
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .student-nav .brand {
+            color: #fff;
+            font-weight: 700;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .student-nav .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .student-nav .student-name {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .btn-logout-sm {
+            background: none;
+            border: 1px solid rgba(229, 115, 115, 0.4);
+            color: #e57373;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout-sm:hover {
+            background: rgba(229, 115, 115, 0.1);
+        }
+
+        .main {
+            padding: 28px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .page-tabs {
+            display: flex;
+            gap: 4px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 6px;
+            border: 1px solid #e8ecf0;
+            margin-bottom: 24px;
+            width: fit-content;
+        }
+
+        .page-tab {
+            padding: 8px 20px;
+            border-radius: 7px;
+            border: none;
+            background: none;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-tab.active {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Profile card */
+        .profile-card {
+            background: linear-gradient(135deg, #1e2a3a, #1a3a5c);
+            border-radius: 14px;
+            padding: 28px;
+            color: #fff;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .profile-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .profile-info h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .profile-info p {
+            font-size: 13px;
+            color: #94a3b8;
+            margin: 0;
+        }
+
+        .profile-badges {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .profile-badge {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 10px 16px;
+            text-align: center;
+        }
+
+        .profile-badge .v {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .profile-badge .l {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        /* Summary cards */
+        .summary-card {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #e8ecf0;
+            padding: 20px;
+        }
+
+        .summary-card .label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 6px;
+        }
+
+        .summary-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e2a3a;
+        }
+
+        /* Attendance bar */
+        .att-bar-wrap {
+            background: #f1f5f9;
+            border-radius: 20px;
+            height: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .att-bar-fill {
+            height: 100%;
+            border-radius: 20px;
+            background: #16a34a;
+            transition: width 0.6s ease;
+        }
+
+        /* Grade badge */
+        .grade-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .grade-Aplus {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .grade-A {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .grade-B {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .grade-C {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .grade-D {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+
+        .grade-F {
+            background: #fff5f5;
+            color: #dc2626;
+        }
+
+        /* Change password section */
+        .pwd-card {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #e8ecf0;
+            padding: 24px;
+            max-width: 440px;
+        }
+
+        @media (max-width: 640px) {
+            .profile-badges {
+                display: none;
+            }
+
+            .profile-card {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="student-nav">
+        <div class="brand">
+            <i class="bi bi-mortarboard-fill" style="color:#60a5fa"></i>
+            Student Portal
+        </div>
+        <div class="nav-right">
+            <span class="student-name" id="navName">Loading...</span>
+            <button class="btn-logout-sm" onclick="handleLogout()">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <div class="main">
+
+        <!-- Profile card -->
+        <div class="profile-card" id="profileCard">
+            <div class="profile-avatar" id="avatarInitial">?</div>
+            <div class="profile-info">
+                <h2 id="profileName">Loading...</h2>
+                <p id="profileClass">—</p>
+                <p id="profileEmail" style="margin-top:4px;">—</p>
+            </div>
+            <div class="profile-badges">
+                <div class="profile-badge">
+                    <div class="v" id="badgeMarks">—</div>
+                    <div class="l">Subjects</div>
+                </div>
+                <div class="profile-badge">
+                    <div class="v" id="badgeAttPct" style="color:#4ade80">—%</div>
+                    <div class="l">Attendance</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="page-tabs">
+            <button class="page-tab active" onclick="switchTab('overview', this)">
+                <i class="bi bi-grid"></i> Overview
+            </button>
+            <button class="page-tab" onclick="switchTab('marks', this)">
+                <i class="bi bi-award"></i> My Marks
+            </button>
+            <button class="page-tab" onclick="switchTab('attendance', this)">
+                <i class="bi bi-calendar-check"></i> Attendance
+            </button>
+            <button class="page-tab" onclick="switchTab('settings', this)">
+                <i class="bi bi-gear"></i> Settings
+            </button>
+            <button class="page-tab" onclick="switchTab('notices', this)">
+                <i class="bi bi-bell"></i> Notices
+            </button>
+            <button class="page-tab" onclick="switchTab('timetable', this)">
+                <i class="bi bi-calendar-week"></i> Timetable
+            </button>
+        </div>
+
+        <!-- Overview tab -->
+        <div class="tab-content active" id="tab-overview">
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <div class="label">Subjects</div>
+                        <div class="value" id="ovSubjects">—</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <div class="label">Average Score</div>
+                        <div class="value" id="ovAvg">—</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <div class="label">Attendance</div>
+                        <div class="value" id="ovAttPct" style="color:#16a34a">—</div>
+                        <div class="att-bar-wrap">
+                            <div class="att-bar-fill" id="ovAttBar" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <div class="label">Days Present</div>
+                        <div class="value" id="ovPresent">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent marks -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold">Recent Marks</h6>
+                </div>
+                <div id="overviewMarks">
+                    <div class="text-center py-4 text-muted">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Recent attendance -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold">Recent Attendance (Last 7 days)</h6>
+                </div>
+                <div id="overviewAtt">
+                    <div class="text-center py-4 text-muted">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marks tab -->
+        <div class="tab-content" id="tab-marks">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">All Marks</h6>
+                    <select id="termFilterMarks" onchange="renderMarksTab()"
+                        style="padding:6px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+                        <option value="">All Terms</option>
+                        <option value="Term 1">Term 1</option>
+                        <option value="Term 2">Term 2</option>
+                        <option value="Term 3">Term 3</option>
+                    </select>
+                </div>
+                <div id="marksTabContent">
+                    <div class="text-center py-4 text-muted">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance tab -->
+        <div class="tab-content" id="tab-attendance">
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <div class="label">Total Days</div>
+                        <div class="value" id="attTotal">—</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <div class="label">Present</div>
+                        <div class="value" style="color:#16a34a" id="attPresent">—</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <div class="label">Absent</div>
+                        <div class="value" style="color:#dc2626" id="attAbsent">—</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card">
+                        <div class="label">Late</div>
+                        <div class="value" style="color:#d97706" id="attLate">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold">Attendance History (Last 30 records)</h6>
+                </div>
+                <div id="attTabContent">
+                    <div class="text-center py-4 text-muted">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings tab -->
+        <div class="tab-content" id="tab-settings">
+            <div class="pwd-card">
+                <h6 class="fw-bold mb-4">Change Password</h6>
+
+                <div class="mb-3">
+                    <label class="form-label" style="font-size:13px;font-weight:500;">Current Password</label>
+                    <input type="password" class="form-control" id="curPwd" placeholder="Enter current password">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size:13px;font-weight:500;">New Password</label>
+                    <input type="password" class="form-control" id="newPwd" placeholder="Min. 6 characters">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size:13px;font-weight:500;">Confirm New Password</label>
+                    <input type="password" class="form-control" id="conPwd" placeholder="Repeat new password">
+                </div>
+                <button class="btn btn-primary w-100" onclick="changePwd()">Update Password</button>
+            </div>
+        </div>
+
+        <!-- Notices tab -->
+        <div class="tab-content" id="tab-notices">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold">Notice Board</h6>
+                </div>
+                <div id="studentNotices" style="padding:16px;">
+                    <div class="text-center py-3 text-muted">Loading notices...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timetable tab -->
+        <div class="tab-content" id="tab-timetable">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold">My Class Timetable</h6>
+                </div>
+                <div id="studentTimetable" style="padding:16px;">
+                    <div class="text-center py-3 text-muted">Loading timetable...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // ── Self-contained auth check ─────────────────────────────
+        const STUDENT_TOKEN = localStorage.getItem('studentToken');
+        const API = 'http://localhost:5000/api';
+
+        if (!STUDENT_TOKEN) {
+            window.location.href = 'login.html';
+        }
+
+        // ── Helper: fetch with student token ──────────────────────
+        async function sGet(endpoint) {
+            const res = await fetch(`${API}${endpoint}`, {
+                headers: { 'Authorization': `Bearer ${STUDENT_TOKEN}` }
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed');
+            return data;
+        }
+
+        async function sPut(endpoint, body) {
+            const res = await fetch(`${API}${endpoint}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${STUDENT_TOKEN}`
+                },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed');
+            return data;
+        }
+
+        // ── Toast ─────────────────────────────────────────────────
+        function toast(msg, type = 'success') {
+            let el = document.getElementById('toast');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'toast';
+                el.style.cssText = `
+        position:fixed;top:20px;right:20px;padding:12px 20px;
+        border-radius:8px;font-size:14px;font-weight:500;z-index:9999;
+        opacity:0;transform:translateY(-10px);transition:all 0.3s;
+        pointer-events:none;font-family:'Segoe UI',sans-serif;`;
+                document.body.appendChild(el);
+            }
+            el.textContent = msg;
+            el.style.background = type === 'success' ? '#f0fdf4' : '#fff5f5';
+            el.style.color = type === 'success' ? '#16a34a' : '#dc2626';
+            el.style.border = `1px solid ${type === 'success' ? '#bbf7d0' : '#fecaca'}`;
+            setTimeout(() => {
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            }, 10);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-10px)';
+            }, 3000);
+        }
+
+        // ── Tab switching ─────────────────────────────────────────
+        function switchTab(name, btn) {
+            document.querySelectorAll('.tab-content')
+                .forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.page-tab')
+                .forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${name}`).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // ── Data ──────────────────────────────────────────────────
+        let marksData = [];
+        let attendanceData = [];
+        let attSummary = {};
+
+        // Show name from localStorage immediately
+        const storedData = JSON.parse(
+            localStorage.getItem('studentData') || '{}'
+        );
+        document.getElementById('navName').textContent =
+            storedData.name || 'Student';
+
+        // ── Load everything ───────────────────────────────────────
+        async function loadAll() {
+            try {
+                // Load in parallel
+                const [meRes, marksRes, attRes] = await Promise.all([
+                    sGet('/student/me'),
+                    sGet('/student/marks'),
+                    sGet('/student/attendance')
+                ]);
+
+                marksData = marksRes.data || [];
+                attendanceData = attRes.data || [];
+                attSummary = attRes.summary || {};
+
+                renderProfile(meRes.data);
+                renderOverview();
+                renderMarksTab();
+                renderAttendanceTab();
+                loadNotices();
+                loadTimetable();
+
+            } catch (err) {
+                console.error('Load error:', err);
+                document.getElementById('tab-overview').innerHTML =
+                    `<div style="text-align:center;padding:40px;color:#dc2626;">
+           Error: ${err.message}<br><br>
+           <a href="login.html" style="color:#2563eb;">Click here to login again</a>
+         </div>`;
+            }
+        }
+
+        function renderProfile(student) {
+            if (!student) return;
+            const initials = student.name
+                ? student.name.split(' ').map(n => n[0]).join('').toUpperCase()
+                : '?';
+            document.getElementById('avatarInitial').textContent = initials;
+            document.getElementById('profileName').textContent = student.name || '—';
+            document.getElementById('profileEmail').textContent = student.email || '—';
+            document.getElementById('profileClass').textContent =
+                student.class_name
+                    ? `${student.class_name} — Section ${student.class_section}`
+                    : 'No class assigned';
+            document.getElementById('badgeMarks').textContent = marksData.length;
+            document.getElementById('badgeAttPct').textContent =
+                (attSummary.percentage || 0) + '%';
+        }
+
+        function getGrade(pct) {
+            if (pct >= 90) return 'A+';
+            if (pct >= 80) return 'A';
+            if (pct >= 70) return 'B';
+            if (pct >= 60) return 'C';
+            if (pct >= 50) return 'D';
+            return 'F';
+        }
+
+        function gradeClass(grade) {
+            const map = {
+                'A+': 'grade-Aplus', 'A': 'grade-A',
+                'B': 'grade-B', 'C': 'grade-C',
+                'D': 'grade-D', 'F': 'grade-F'
+            };
+            return map[grade] || 'grade-F';
+        }
+
+        function renderOverview() {
+            const avg = marksData.length
+                ? Math.round(
+                    marksData.reduce((s, m) =>
+                        s + (m.marks_obtained / m.total_marks * 100), 0
+                    ) / marksData.length
+                )
+                : 0;
+
+            document.getElementById('ovSubjects').textContent = marksData.length;
+            document.getElementById('ovAvg').textContent = avg + '%';
+            document.getElementById('ovAttPct').textContent =
+                (attSummary.percentage || 0) + '%';
+            document.getElementById('ovAttBar').style.width =
+                (attSummary.percentage || 0) + '%';
+            document.getElementById('ovPresent').textContent =
+                attSummary.present || 0;
+
+            // Recent marks
+            const recent = marksData.slice(0, 5);
+            if (!recent.length) {
+                document.getElementById('overviewMarks').innerHTML =
+                    '<div style="text-align:center;padding:20px;color:#64748b;font-size:14px;">No marks yet.</div>';
+            } else {
+                const rows = recent.map(m => {
+                    const pct = Math.round((m.marks_obtained / m.total_marks) * 100);
+                    const grade = m.grade || getGrade(pct);
+                    return `<tr>
+          <td style="padding:8px 12px;">${m.subject}</td>
+          <td style="padding:8px 12px;">${m.marks_obtained}/${m.total_marks}</td>
+          <td style="padding:8px 12px;">${pct}%</td>
+          <td style="padding:8px 12px;">
+            <span class="grade-badge ${gradeClass(grade)}">${grade}</span>
+          </td>
+          <td style="padding:8px 12px;color:#64748b;font-size:12px;">${m.term || '—'}</td>
+        </tr>`;
+                }).join('');
+                document.getElementById('overviewMarks').innerHTML = `
+        <table class="table table-sm mb-0" style="font-size:14px;">
+          <thead class="table-light">
+            <tr>
+              <th class="px-3 py-2">Subject</th>
+              <th class="px-3 py-2">Score</th>
+              <th class="px-3 py-2">%</th>
+              <th class="px-3 py-2">Grade</th>
+              <th class="px-3 py-2">Term</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+            }
+
+            // Recent attendance
+            const recentAtt = attendanceData.slice(0, 7);
+            if (!recentAtt.length) {
+                document.getElementById('overviewAtt').innerHTML =
+                    '<div style="text-align:center;padding:20px;color:#64748b;font-size:14px;">No attendance yet.</div>';
+            } else {
+                const attRows = recentAtt.map(a => {
+                    const cls = { present: 'badge-present', absent: 'badge-absent', late: 'badge-late' };
+                    return `<tr>
+          <td class="px-3 py-2">
+            ${new Date(a.att_date).toLocaleDateString()}
+          </td>
+          <td class="px-3 py-2">
+            <span class="badge ${cls[a.status]}">${a.status}</span>
+          </td>
+        </tr>`;
+                }).join('');
+                document.getElementById('overviewAtt').innerHTML = `
+        <table class="table table-sm mb-0" style="font-size:14px;">
+          <thead class="table-light">
+            <tr>
+              <th class="px-3 py-2">Date</th>
+              <th class="px-3 py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>${attRows}</tbody>
+        </table>`;
+            }
+        }
+
+        function renderMarksTab() {
+            const term = document.getElementById('termFilterMarks').value;
+            const filtered = term
+                ? marksData.filter(m => m.term === term)
+                : marksData;
+
+            if (!filtered.length) {
+                document.getElementById('marksTabContent').innerHTML =
+                    '<div style="text-align:center;padding:24px;color:#64748b;">No marks found.</div>';
+                return;
+            }
+
+            const rows = filtered.map(m => {
+                const pct = Math.round((m.marks_obtained / m.total_marks) * 100);
+                const grade = m.grade || getGrade(pct);
+                const barColor = pct >= 70 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
+                return `<tr>
+        <td class="px-3 py-2"><strong>${m.subject}</strong></td>
+        <td class="px-3 py-2">${m.marks_obtained}/${m.total_marks}</td>
+        <td class="px-3 py-2" style="min-width:140px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;background:#f1f5f9;border-radius:20px;
+                        height:8px;overflow:hidden;">
+              <div style="width:${pct}%;height:100%;background:${barColor};
+                          border-radius:20px;"></div>
+            </div>
+            <span style="font-size:12px;color:#64748b;">${pct}%</span>
+          </div>
+        </td>
+        <td class="px-3 py-2">
+          <span class="grade-badge ${gradeClass(grade)}">${grade}</span>
+        </td>
+        <td class="px-3 py-2" style="color:#64748b;font-size:12px;">
+          ${m.term || '—'}
+        </td>
+      </tr>`;
+            }).join('');
+
+            document.getElementById('marksTabContent').innerHTML = `
+      <table class="table table-sm mb-0" style="font-size:14px;">
+        <thead class="table-light">
+          <tr>
+            <th class="px-3 py-2">Subject</th>
+            <th class="px-3 py-2">Score</th>
+            <th class="px-3 py-2">Progress</th>
+            <th class="px-3 py-2">Grade</th>
+            <th class="px-3 py-2">Term</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+        }
+
+        function renderAttendanceTab() {
+            document.getElementById('attTotal').textContent = attSummary.total || 0;
+            document.getElementById('attPresent').textContent = attSummary.present || 0;
+            document.getElementById('attAbsent').textContent = attSummary.absent || 0;
+            document.getElementById('attLate').textContent = attSummary.late || 0;
+
+            if (!attendanceData.length) {
+                document.getElementById('attTabContent').innerHTML =
+                    '<div style="text-align:center;padding:24px;color:#64748b;">No attendance records yet.</div>';
+                return;
+            }
+
+            const cls = { present: 'badge-present', absent: 'badge-absent', late: 'badge-late' };
+            const rows = attendanceData.map(a => `
+      <tr>
+        <td class="px-3 py-2">
+          ${new Date(a.att_date).toLocaleDateString('en-GB', {
+                weekday: 'short', year: 'numeric',
+                month: 'short', day: 'numeric'
+            })}
+        </td>
+        <td class="px-3 py-2">
+          <span class="badge ${cls[a.status]}">${a.status}</span>
+        </td>
+      </tr>`).join('');
+
+            document.getElementById('attTabContent').innerHTML = `
+      <table class="table table-sm mb-0" style="font-size:14px;">
+        <thead class="table-light">
+          <tr>
+            <th class="px-3 py-2">Date</th>
+            <th class="px-3 py-2">Status</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+        }
+
+        async function loadNotices() {
+            try {
+                const res = await fetch(`${API}/notices`);
+                const data = await res.json();
+                const notices = data.data || [];
+
+                const noticesEl = document.getElementById('studentNotices');
+                if (!noticesEl) return;
+
+                if (!notices.length) {
+                    noticesEl.innerHTML =
+                        '<p style="color:#64748b;text-align:center;padding:20px;font-size:14px;">No notices yet.</p>';
+                    return;
+                }
+
+                const colors = {
+                    general: '#2563eb', exam: '#dc2626',
+                    holiday: '#16a34a', event: '#7c3aed',
+                    fee: '#d97706', other: '#64748b'
+                };
+
+                noticesEl.innerHTML = notices.map(n => `
+        <div style="border-left:3px solid ${colors[n.category] || '#2563eb'};
+                    padding:12px 16px;margin-bottom:10px;background:#f8fafc;
+                    border-radius:0 8px 8px 0;">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;
+                      color:${colors[n.category]};margin-bottom:4px;">
+            ${n.category}
+          </div>
+          <div style="font-size:15px;font-weight:600;color:#1e2a3a;
+                      margin-bottom:4px;">${n.title}</div>
+          <div style="font-size:13px;color:#374151;line-height:1.5;">
+            ${n.content}
+          </div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:6px;">
+            ${new Date(n.posted_date).toLocaleDateString('en-GB', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                })}
+          </div>
+        </div>`).join('');
+            } catch (err) {
+                const el = document.getElementById('studentNotices');
+                if (el) el.innerHTML =
+                    '<p style="color:#dc2626;text-align:center;padding:16px;">Failed to load notices.</p>';
+            }
+        }
+
+        async function loadTimetable() {
+            const ttEl = document.getElementById('studentTimetable');
+            if (!ttEl) return;
+
+            try {
+                const stored = JSON.parse(localStorage.getItem('studentData') || '{}');
+                const classId = stored.class_id;
+
+                if (!classId) {
+                    ttEl.innerHTML =
+                        '<p style="color:#64748b;text-align:center;padding:20px;">No class assigned.</p>';
+                    return;
+                }
+
+                const res = await fetch(`${API}/timetable/class/${classId}`, {
+                    headers: { 'Authorization': `Bearer ${STUDENT_TOKEN}` }
+                });
+                const data = await res.json();
+                const entries = data.data || [];
+
+                if (!entries.length) {
+                    ttEl.innerHTML =
+                        '<p style="color:#64748b;text-align:center;padding:20px;">No timetable set up yet.</p>';
+                    return;
+                }
+
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday',
+                    'Thursday', 'Friday', 'Saturday'];
+                const groups = {};
+                entries.forEach(e => {
+                    if (!groups[e.day]) groups[e.day] = [];
+                    groups[e.day].push(e);
+                });
+
+                const bgColors = [
+                    '#eff6ff', '#f0fdf4', '#fff7ed', '#fdf4ff',
+                    '#fffbeb', '#f0fdfa', '#fff5f5'
+                ];
+                const colorMap = {};
+                let ci = 0;
+
+                ttEl.innerHTML = days
+                    .filter(d => groups[d])
+                    .map(day => {
+                        const periods = groups[day].sort((a, b) => a.period_no - b.period_no);
+                        const cards = periods.map(p => {
+                            if (!colorMap[p.subject_name]) {
+                                colorMap[p.subject_name] = bgColors[ci++ % bgColors.length];
+                            }
+                            return `
+              <div style="display:inline-block;background:${colorMap[p.subject_name]};
+                          border-radius:8px;padding:8px 12px;margin:4px;
+                          min-width:110px;vertical-align:top;">
+                <div style="font-size:10px;color:#94a3b8;">
+                  P${p.period_no}
+                  ${p.start_time ? '· ' + p.start_time.slice(0, 5) : ''}
+                </div>
+                <div style="font-size:13px;font-weight:700;color:#1e2a3a;">
+                  ${p.subject_name}
+                </div>
+                <div style="font-size:11px;color:#64748b;">
+                  ${p.teacher_name}
+                </div>
+              </div>`;
+                        }).join('');
+
+                        return `
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12px;font-weight:700;color:#1e2a3a;
+                          text-transform:uppercase;letter-spacing:0.5px;
+                          margin-bottom:6px;padding-bottom:4px;
+                          border-bottom:1px solid #e8ecf0;">
+                ${day}
+              </div>
+              ${cards}
+            </div>`;
+                    }).join('');
+
+            } catch (err) {
+                if (ttEl) ttEl.innerHTML =
+                    '<p style="color:#dc2626;text-align:center;padding:16px;">Failed to load timetable.</p>';
+            }
+        }
+
+        async function changePwd() {
+            const cur = document.getElementById('curPwd').value;
+            const nw = document.getElementById('newPwd').value;
+            const con = document.getElementById('conPwd').value;
+
+            if (!cur || !nw || !con) { toast('All fields required', 'error'); return; }
+            if (nw !== con) { toast('Passwords do not match', 'error'); return; }
+            if (nw.length < 6) { toast('Min 6 characters', 'error'); return; }
+
+            try {
+                await sPut('/student/change-password', {
+                    currentPassword: cur, newPassword: nw
+                });
+                toast('Password changed');
+                document.getElementById('curPwd').value = '';
+                document.getElementById('newPwd').value = '';
+                document.getElementById('conPwd').value = '';
+            } catch (err) {
+                toast(err.message, 'error');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('studentToken');
+            localStorage.removeItem('studentName');
+            localStorage.removeItem('studentData');
+            window.location.href = 'login.html';
+        }
+
+        // ── Start ─────────────────────────────────────────────────
+        loadAll();
+    </script>
+</body>
+
+</html>

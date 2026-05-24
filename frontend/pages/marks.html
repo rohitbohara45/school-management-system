@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marks — School Management</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>SchoolMS</h2><small>Admin Panel</small>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="students.html">Students</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="classes.html">Classes</a>
+        <a href="subjects.html">Subjects</a>
+        <a href="exams.html">Exams</a>
+        <a href="marks.html">Marks</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="fees.html">Fees</a>
+        <a href="notices.html">Notices</a>
+        <a href="timetable.html">Timetable</a>
+        <a href="promotion.html">Promotion</a>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="adminName">Admin</span>
+        <button class="btn-logout" onclick="handleLogout()">Logout</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <div class="page-header">
+        <h1>Marks</h1>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add Marks</button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 id="marksCount">All Marks</h2>
+          <select id="termFilter" onchange="loadMarks()"
+            style="padding:7px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+            <option value="">All Terms</option>
+            <option value="Term 1">Term 1</option>
+            <option value="Term 2">Term 2</option>
+            <option value="Term 3">Term 3</option>
+          </select>
+        </div>
+        <div id="marksTable">
+          <div class="loading">Loading...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2 id="modalTitle">Add Marks</h2>
+      <div class="form-group">
+        <label>Student *</label>
+        <select id="fieldStudent">
+          <option value="">— Select student —</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Subject *</label>
+          <input type="text" id="fieldSubject" placeholder="e.g. Mathematics">
+        </div>
+        <div class="form-group">
+          <label>Term</label>
+          <select id="fieldTerm">
+            <option value="Term 1">Term 1</option>
+            <option value="Term 2">Term 2</option>
+            <option value="Term 3">Term 3</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Marks Obtained *</label>
+          <input type="number" id="fieldMarks" min="0" placeholder="e.g. 85">
+        </div>
+        <div class="form-group">
+          <label>Total Marks</label>
+          <input type="number" id="fieldTotal" value="100" min="1">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn" onclick="saveMarks()">Save Marks</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    requireAuth();
+    document.getElementById('adminName').textContent = localStorage.getItem('adminName') || 'Admin';
+    let editingId = null;
+
+    async function loadMarks() {
+      const term = document.getElementById('termFilter').value;
+      try {
+        const res = await MarksAPI.getAll(term ? { term } : {});
+        const marks = res.data;
+        document.getElementById('marksCount').textContent = `All Marks (${marks.length})`;
+        if (!marks.length) {
+          document.getElementById('marksTable').innerHTML = '<div class="loading">No marks found.</div>';
+          return;
+        }
+        const rows = marks.map(m => {
+          const pct = m.percentage || Math.round((m.marks_obtained / m.total_marks) * 100);
+          const grade = m.grade || 'N/A';
+          return `<tr>
+          <td><strong>${m.student_name}</strong></td>
+          <td>${m.class_name ? m.class_name + ' ' + m.section : '—'}</td>
+          <td>${m.subject}</td>
+          <td>${m.marks_obtained} / ${m.total_marks}</td>
+          <td>${pct}%</td>
+          <td><span class="badge ${pct >= 50 ? 'badge-present' : 'badge-absent'}">${grade}</span></td>
+          <td>${m.term}</td>
+          <td>
+            <button class="btn btn-sm btn-edit"   onclick="openEditModal(${m.id})">Edit</button>
+            <button class="btn btn-sm btn-delete" onclick="deleteMark(${m.id})">Delete</button>
+          </td>
+        </tr>`;
+        }).join('');
+        document.getElementById('marksTable').innerHTML = `
+        <table>
+          <thead><tr><th>Student</th><th>Class</th><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th><th>Term</th><th>Actions</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      } catch (err) {
+        document.getElementById('marksTable').innerHTML = '<div class="loading">Failed to load.</div>';
+      }
+    }
+
+    async function loadStudentOptions(selectedId = null) {
+      try {
+        const res = await StudentsAPI.getAll();
+        const opts = res.data.map(s =>
+          `<option value="${s.id}" ${s.id == selectedId ? 'selected' : ''}>${s.name}</option>`
+        ).join('');
+        document.getElementById('fieldStudent').innerHTML =
+          '<option value="">— Select student —</option>' + opts;
+      } catch (err) { showToast('Failed to load students', 'error'); }
+    }
+
+    async function openAddModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'Add Marks';
+      document.getElementById('saveBtn').textContent = 'Save Marks';
+      document.getElementById('fieldSubject').value = '';
+      document.getElementById('fieldMarks').value = '';
+      document.getElementById('fieldTotal').value = '100';
+      await loadStudentOptions();
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    async function openEditModal(id) {
+      editingId = id;
+      document.getElementById('modalTitle').textContent = 'Edit Marks';
+      document.getElementById('saveBtn').textContent = 'Update Marks';
+      try {
+        const res = await MarksAPI.getAll();
+        const m = res.data.find(x => x.id === id);
+        if (!m) { showToast('Record not found', 'error'); return; }
+        await loadStudentOptions(m.student_id);
+        document.getElementById('fieldSubject').value = m.subject;
+        document.getElementById('fieldMarks').value = m.marks_obtained;
+        document.getElementById('fieldTotal').value = m.total_marks;
+        document.getElementById('fieldTerm').value = m.term;
+        document.getElementById('modalOverlay').classList.add('open');
+      } catch (err) { showToast('Failed to load record', 'error'); }
+    }
+
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+    async function saveMarks() {
+      const student_id = document.getElementById('fieldStudent').value;
+      const subject = document.getElementById('fieldSubject').value.trim();
+      const marks_obtained = parseInt(document.getElementById('fieldMarks').value);
+      const total_marks = parseInt(document.getElementById('fieldTotal').value);
+      const term = document.getElementById('fieldTerm').value;
+
+      if (!subject || isNaN(marks_obtained)) {
+        showToast('Student, subject and marks are required', 'error'); return;
+      }
+
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      try {
+        if (editingId) {
+          await MarksAPI.update(editingId, { subject, marks_obtained, total_marks, term });
+          showToast('Marks updated');
+        } else {
+          if (!student_id) { showToast('Please select a student', 'error'); return; }
+          await MarksAPI.create({ student_id, subject, marks_obtained, total_marks, term });
+          showToast('Marks added');
+        }
+        closeModal(); loadMarks();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = editingId ? 'Update Marks' : 'Save Marks';
+      }
+    }
+
+    async function deleteMark(id) {
+      if (!confirm('Delete this marks record?')) return;
+      try {
+        await MarksAPI.delete(id); showToast('Deleted'); loadMarks();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    function handleLogout() { removeToken(); window.location.href = 'login.html'; }
+    document.getElementById('modalOverlay').addEventListener('click', function (e) {
+      if (e.target === this) closeModal();
+    });
+    loadMarks();
+  </script>
+</body>
+
+</html>

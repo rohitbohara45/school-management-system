@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notices — SchoolMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .notice-card {
+            background: #fff;
+            border: 1px solid #e8ecf0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 12px;
+            border-left: 4px solid #2563eb;
+            transition: all 0.2s;
+        }
+
+        .notice-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .notice-card.category-exam {
+            border-left-color: #dc2626;
+        }
+
+        .notice-card.category-holiday {
+            border-left-color: #16a34a;
+        }
+
+        .notice-card.category-event {
+            border-left-color: #7c3aed;
+        }
+
+        .notice-card.category-fee {
+            border-left-color: #d97706;
+        }
+
+        .notice-card.category-other {
+            border-left-color: #64748b;
+        }
+
+        .cat-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .cat-general {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .cat-exam {
+            background: #fff5f5;
+            color: #dc2626;
+        }
+
+        .cat-holiday {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .cat-event {
+            background: #f5f3ff;
+            color: #7c3aed;
+        }
+
+        .cat-fee {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .cat-other {
+            background: #f8fafc;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h2>SchoolMS</h2><small>Admin Panel</small>
+            </div>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="students.html">Students</a>
+                <a href="teachers.html">Teachers</a>
+                <a href="classes.html">Classes</a>
+                <a href="subjects.html">Subjects</a>
+                <a href="exams.html">Exams</a>
+                <a href="marks.html">Marks</a>
+                <a href="attendance.html">Attendance</a>
+                <a href="fees.html">Fees</a>
+                <a href="notices.html" class="active">Notices</a>
+                <a href="timetable.html">Timetable</a>
+                <a href="promotion.html">Promotion</a>
+            </nav>
+            <div class="sidebar-footer">
+                <span id="adminName">Admin</span>
+                <button class="btn-logout" onclick="handleLogout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Notice Board</h1>
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    + Post Notice
+                </button>
+            </div>
+
+            <!-- Category filter -->
+            <div class="card mb-3" style="padding:14px 16px;">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="filter-btn active" onclick="filterByCategory('', this)">
+                        All
+                    </button>
+                    <button class="filter-btn" onclick="filterByCategory('general', this)">
+                        General
+                    </button>
+                    <button class="filter-btn" onclick="filterByCategory('exam', this)">
+                        Exam
+                    </button>
+                    <button class="filter-btn" onclick="filterByCategory('holiday', this)">
+                        Holiday
+                    </button>
+                    <button class="filter-btn" onclick="filterByCategory('event', this)">
+                        Event
+                    </button>
+                    <button class="filter-btn" onclick="filterByCategory('fee', this)">
+                        Fee
+                    </button>
+                </div>
+            </div>
+
+            <div id="noticesList">
+                <div class="loading">Loading notices...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" style="width:520px;">
+            <h2 id="modalTitle">Post Notice</h2>
+
+            <div class="form-group">
+                <label>Title *</label>
+                <input type="text" id="fieldTitle" placeholder="Notice title">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="fieldCategory">
+                        <option value="general">General</option>
+                        <option value="exam">Exam</option>
+                        <option value="holiday">Holiday</option>
+                        <option value="event">Event</option>
+                        <option value="fee">Fee</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="fieldDate">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Content *</label>
+                <textarea id="fieldContent" rows="5" style="width:100%;padding:9px 12px;border:1px solid #d1d5db;
+               border-radius:7px;font-size:14px;resize:vertical;" placeholder="Write your notice here..."></textarea>
+            </div>
+
+            <div class="form-group" id="activeGroup" style="display:none;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" id="fieldActive" checked style="width:16px;height:16px;">
+                    <span>Active (visible to all users)</span>
+                </label>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" id="saveBtn" onclick="saveNotice()">
+                    Post Notice
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .filter-btn {
+            padding: 6px 14px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #64748b;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #2563eb;
+            color: #fff;
+            border-color: #2563eb;
+        }
+    </style>
+
+    <script src="../js/api.js"></script>
+    <script>
+        requireAuth();
+        document.getElementById('adminName').textContent =
+            localStorage.getItem('adminName') || 'Admin';
+
+        let editingId = null;
+        let currentCategory = '';
+
+        // Set today's date as default
+        document.getElementById('fieldDate').value =
+            new Date().toISOString().split('T')[0];
+
+        async function loadNotices(category = '') {
+            try {
+                const res = await NoticesAPI.getAll(category || null);
+                const notices = res.data;
+
+                if (!notices.length) {
+                    document.getElementById('noticesList').innerHTML =
+                        '<div class="loading">No notices found.</div>';
+                    return;
+                }
+
+                const html = notices.map(n => `
+        <div class="notice-card category-${n.category}">
+          <div style="display:flex;justify-content:space-between;
+                      align-items:flex-start;flex-wrap:wrap;gap:10px;">
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span class="cat-badge cat-${n.category}">${n.category}</span>
+                <span style="font-size:12px;color:#94a3b8;">
+                  ${new Date(n.posted_date).toLocaleDateString('en-GB', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                })}
+                </span>
+              </div>
+              <h3 style="font-size:16px;font-weight:700;color:#1e2a3a;
+                         margin-bottom:8px;">${n.title}</h3>
+              <p style="font-size:14px;color:#374151;line-height:1.6;
+                        margin:0;">${n.content}</p>
+              <div style="font-size:12px;color:#94a3b8;margin-top:8px;">
+                Posted by ${n.posted_by}
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button class="btn btn-sm btn-edit" onclick="openEditModal(${n.id})">
+                Edit
+              </button>
+              <button class="btn btn-sm btn-delete"
+                onclick="deleteNotice(${n.id}, '${n.title.replace(/'/g, "\\'")}')">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+                document.getElementById('noticesList').innerHTML = html;
+            } catch (err) {
+                document.getElementById('noticesList').innerHTML =
+                    '<div class="loading">Failed to load notices.</div>';
+            }
+        }
+
+        function filterByCategory(category, btn) {
+            currentCategory = category;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            loadNotices(category);
+        }
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Post Notice';
+            document.getElementById('saveBtn').textContent = 'Post Notice';
+            document.getElementById('fieldTitle').value = '';
+            document.getElementById('fieldContent').value = '';
+            document.getElementById('fieldCategory').value = 'general';
+            document.getElementById('fieldDate').value =
+                new Date().toISOString().split('T')[0];
+            document.getElementById('activeGroup').style.display = 'none';
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        async function openEditModal(id) {
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Notice';
+            document.getElementById('saveBtn').textContent = 'Update Notice';
+            document.getElementById('activeGroup').style.display = 'block';
+            try {
+                const res = await NoticesAPI.getOne(id);
+                const n = res.data;
+                document.getElementById('fieldTitle').value = n.title;
+                document.getElementById('fieldContent').value = n.content;
+                document.getElementById('fieldCategory').value = n.category;
+                document.getElementById('fieldDate').value = n.posted_date
+                    ? new Date(n.posted_date).toISOString().split('T')[0] : '';
+                document.getElementById('fieldActive').checked = !!n.is_active;
+                document.getElementById('modalOverlay').classList.add('open');
+            } catch (err) {
+                showToast('Failed to load notice', 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        async function saveNotice() {
+            const title = document.getElementById('fieldTitle').value.trim();
+            const content = document.getElementById('fieldContent').value.trim();
+            const category = document.getElementById('fieldCategory').value;
+            const posted_date = document.getElementById('fieldDate').value;
+            const is_active = document.getElementById('fieldActive').checked ? 1 : 0;
+
+            if (!title) { showToast('Title is required', 'error'); return; }
+            if (!content) { showToast('Content is required', 'error'); return; }
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                if (editingId) {
+                    await NoticesAPI.update(editingId, {
+                        title, content, category, posted_date, is_active
+                    });
+                    showToast('Notice updated');
+                } else {
+                    await NoticesAPI.create({ title, content, category, posted_date });
+                    showToast('Notice posted');
+                }
+                closeModal();
+                loadNotices(currentCategory);
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = editingId ? 'Update Notice' : 'Post Notice';
+            }
+        }
+
+        async function deleteNotice(id, title) {
+            if (!confirm(`Delete notice "${title}"?`)) return;
+            try {
+                await NoticesAPI.delete(id);
+                showToast('Notice deleted');
+                loadNotices(currentCategory);
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function handleLogout() {
+            removeToken();
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+
+        loadNotices();
+    </script>
+</body>
+
+</html>

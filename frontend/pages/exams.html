@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exams — SchoolMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .exam-card {
+            background: #fff;
+            border: 1px solid #e8ecf0;
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .exam-card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+        }
+
+        .exam-type-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .type-unit_test {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .type-mid_term {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .type-final {
+            background: #fff5f5;
+            color: #dc2626;
+        }
+
+        .type-other {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .division-distinction {
+            color: #7c3aed;
+            font-weight: 700;
+        }
+
+        .division-first {
+            color: #16a34a;
+            font-weight: 700;
+        }
+
+        .division-second {
+            color: #d97706;
+            font-weight: 700;
+        }
+
+        .division-fail {
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        .marks-table input {
+            width: 70px;
+            padding: 4px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .marks-table input:focus {
+            border-color: #2563eb;
+            outline: none;
+        }
+
+        .marks-table input.fail {
+            border-color: #fca5a5;
+            background: #fff5f5;
+        }
+
+        .absent-check {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h2>SchoolMS</h2><small>Admin Panel</small>
+            </div>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="students.html">Students</a>
+                <a href="teachers.html">Teachers</a>
+                <a href="classes.html">Classes</a>
+                <a href="subjects.html">Subjects</a>
+                <a href="exams.html" class="active">Exams</a>
+                <a href="marks.html">Marks</a>
+                <a href="attendance.html">Attendance</a>
+                <a href="fees.html">Fees</a>
+                <a href="notices.html">Notices</a>
+                <a href="timetable.html">Timetable</a>
+                <a href="promotion.html">Promotion</a>
+            </nav>
+            <div class="sidebar-footer">
+                <span id="adminName">Admin</span>
+                <button class="btn-logout" onclick="handleLogout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <!-- Panel: Exam List -->
+            <div id="panelList">
+                <div class="page-header">
+                    <h1>Exams</h1>
+                    <button class="btn btn-primary" onclick="openAddModal()">
+                        + Create Exam
+                    </button>
+                </div>
+
+                <div class="card mb-3" style="padding:14px 16px;">
+                    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                        <select id="classFilter" onchange="loadExams()"
+                            style="padding:7px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;min-width:160px;">
+                            <option value="">All Classes</option>
+                        </select>
+                        <select id="yearFilter" onchange="loadExams()"
+                            style="padding:7px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2023">2023</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="examsList">
+                    <div class="loading">Loading exams...</div>
+                </div>
+            </div>
+
+            <!-- Panel: Marks Entry -->
+            <div id="panelMarks" style="display:none;">
+                <div class="page-header">
+                    <h1 id="marksTitle">Enter Marks</h1>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-primary" id="saveMarksBtn" onclick="saveAllMarks()">
+                            Save Marks
+                        </button>
+                        <button class="btn" style="background:#f1f5f9;border:1px solid #e2e8f0;"
+                            onclick="showPanel('list')">
+                            ← Back
+                        </button>
+                    </div>
+                </div>
+                <div id="marksSheetContainer">
+                    <div class="loading">Loading marks sheet...</div>
+                </div>
+            </div>
+
+            <!-- Panel: Results -->
+            <div id="panelResult" style="display:none;">
+                <div class="page-header">
+                    <h1 id="resultTitle">Exam Results</h1>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-primary" onclick="downloadResultPDF()">
+                            <i class="bi bi-download"></i> Download PDF
+                        </button>
+                        <button class="btn" style="background:#f1f5f9;border:1px solid #e2e8f0;"
+                            onclick="showPanel('list')">
+                            ← Back
+                        </button>
+                    </div>
+                </div>
+                <div id="resultContainer">
+                    <div class="loading">Loading results...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Exam Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h2 id="modalTitle">Create Exam</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Exam Name *</label>
+                    <input type="text" id="fieldName" placeholder="e.g. First Unit Test">
+                </div>
+                <div class="form-group">
+                    <label>Type *</label>
+                    <select id="fieldType">
+                        <option value="unit_test">Unit Test</option>
+                        <option value="mid_term">Mid Term</option>
+                        <option value="final">Final Exam</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Class *</label>
+                    <select id="fieldClass">
+                        <option value="">— Select class —</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Academic Year</label>
+                    <input type="number" id="fieldYear" value="2024" min="2000" max="2100">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Exam Date</label>
+                <input type="date" id="fieldDate">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="fieldDesc" placeholder="Optional description">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" id="saveBtn" onclick="saveExam()">
+                    Create Exam
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        requireAuth();
+        document.getElementById('adminName').textContent =
+            localStorage.getItem('adminName') || 'Admin';
+
+        let editingId = null;
+        let currentExamId = null;
+        let currentSheet = null;
+        let marksInputData = {};
+
+        // ── Panel management ──────────────────────────────────────
+        function showPanel(name) {
+            document.getElementById('panelList').style.display = name === 'list' ? '' : 'none';
+            document.getElementById('panelMarks').style.display = name === 'marks' ? '' : 'none';
+            document.getElementById('panelResult').style.display = name === 'result' ? '' : 'none';
+        }
+
+        // ── Load class dropdown ───────────────────────────────────
+        async function loadClassDropdowns() {
+            try {
+                const res = await ClassesAPI.getAll();
+                const opts = res.data.map(c =>
+                    `<option value="${c.id}">${c.name} - ${c.section}</option>`
+                ).join('');
+                const placeholder = '<option value="">All Classes</option>';
+                document.getElementById('classFilter').innerHTML = placeholder + opts;
+                document.getElementById('fieldClass').innerHTML =
+                    '<option value="">— Select class —</option>' + opts;
+            } catch (err) { }
+        }
+
+        // ── Load exams list ───────────────────────────────────────
+        async function loadExams() {
+            const classId = document.getElementById('classFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            try {
+                const res = await ExamsAPI.getAll(classId, year);
+                const exams = res.data;
+
+                if (!exams.length) {
+                    document.getElementById('examsList').innerHTML =
+                        '<div class="loading">No exams found. Create one to get started.</div>';
+                    return;
+                }
+
+                const cards = exams.map(e => `
+        <div class="exam-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                <strong style="font-size:16px;color:#1e2a3a;">${e.name}</strong>
+                <span class="exam-type-badge type-${e.type}">
+                  ${e.type.replace('_', ' ')}
+                </span>
+              </div>
+              <div style="font-size:13px;color:#64748b;display:flex;gap:16px;flex-wrap:wrap;">
+                <span><i class="bi bi-journal-text"></i> ${e.class_name} - ${e.class_section}</span>
+                <span><i class="bi bi-calendar"></i> ${e.exam_date ? new Date(e.exam_date).toLocaleDateString() : 'No date set'}</span>
+                <span><i class="bi bi-people"></i> ${e.students_marked} students marked</span>
+                <span><i class="bi bi-calendar2"></i> ${e.academic_year}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-sm"
+                style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;"
+                onclick="openMarksEntry(${e.id}, '${e.name}')">
+                <i class="bi bi-pencil-square"></i> Enter Marks
+              </button>
+              <button class="btn btn-sm"
+                style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;"
+                onclick="viewResults(${e.id}, '${e.name}')">
+                <i class="bi bi-bar-chart"></i> Results
+              </button>
+              <button class="btn btn-sm btn-edit" onclick="openEditModal(${e.id})">
+                Edit
+              </button>
+              <button class="btn btn-sm btn-delete"
+                onclick="deleteExam(${e.id},'${e.name}')">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+                document.getElementById('examsList').innerHTML = cards;
+            } catch (err) {
+                document.getElementById('examsList').innerHTML =
+                    '<div class="loading">Failed to load exams.</div>';
+            }
+        }
+
+        // ── Marks Entry ───────────────────────────────────────────
+        async function openMarksEntry(examId, examName) {
+            currentExamId = examId;
+            marksInputData = {};
+            document.getElementById('marksTitle').textContent = `Enter Marks — ${examName}`;
+            showPanel('marks');
+            document.getElementById('marksSheetContainer').innerHTML =
+                '<div class="loading">Loading students and subjects...</div>';
+
+            try {
+                const res = await ExamsAPI.getMarksSheet(examId);
+                currentSheet = res.data;
+                renderMarksSheet(currentSheet);
+            } catch (err) {
+                document.getElementById('marksSheetContainer').innerHTML =
+                    `<div class="loading">${err.message}</div>`;
+            }
+        }
+
+        function renderMarksSheet({ exam, subjects, students, marksMap }) {
+            if (!subjects.length) {
+                document.getElementById('marksSheetContainer').innerHTML =
+                    '<div class="loading">No subjects found for this class. Add subjects first.</div>';
+                return;
+            }
+            if (!students.length) {
+                document.getElementById('marksSheetContainer').innerHTML =
+                    '<div class="loading">No students found in this class.</div>';
+                return;
+            }
+
+            const subjectHeaders = subjects.map(s =>
+                `<th style="padding:8px 10px;min-width:100px;">
+        <div style="font-size:12px;font-weight:600;">${s.name}</div>
+        <div style="font-size:10px;color:#94a3b8;">FM: ${s.full_marks} | PM: ${s.pass_marks}</div>
+      </th>`
+            ).join('');
+
+            const rows = students.map(student => {
+                const cells = subjects.map(subject => {
+                    const key = `${student.id}_${subject.id}`;
+                    const existing = marksMap[key];
+                    const val = existing ? existing.marks_obtained : '';
+                    const absent = existing ? existing.is_absent : false;
+
+                    return `
+          <td style="padding:6px 10px;text-align:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <input
+                type="number"
+                class="marks-input"
+                id="marks_${student.id}_${subject.id}"
+                value="${val}"
+                min="0"
+                max="${subject.full_marks}"
+                placeholder="—"
+                data-student="${student.id}"
+                data-subject="${subject.id}"
+                data-full="${subject.full_marks}"
+                data-pass="${subject.pass_marks}"
+                oninput="validateMarksInput(this)"
+                ${absent ? 'disabled' : ''}>
+              <label style="font-size:10px;color:#64748b;display:flex;align-items:center;gap:3px;cursor:pointer;">
+                <input
+                  type="checkbox"
+                  class="absent-check"
+                  id="absent_${student.id}_${subject.id}"
+                  ${absent ? 'checked' : ''}
+                  onchange="toggleAbsent(this, ${student.id}, ${subject.id})">
+                Absent
+              </label>
+            </div>
+          </td>
+        `;
+                }).join('');
+
+                return `
+        <tr>
+          <td style="padding:8px 12px;font-weight:500;white-space:nowrap;">
+            ${student.name}
+          </td>
+          ${cells}
+          <td style="padding:8px 12px;text-align:center;" id="total_${student.id}">
+            —
+          </td>
+        </tr>
+      `;
+            }).join('');
+
+            document.getElementById('marksSheetContainer').innerHTML = `
+      <div style="overflow-x:auto;">
+        <table class="marks-table"
+          style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:#1e2a3a;color:#fff;">
+              <th style="padding:10px 12px;text-align:left;min-width:160px;">Student</th>
+              ${subjectHeaders}
+              <th style="padding:8px 10px;min-width:80px;">Total</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div style="padding:12px 16px;background:#f8fafc;border-top:1px solid #e8ecf0;
+                  font-size:12px;color:#64748b;">
+        <i class="bi bi-info-circle"></i>
+        Red border = below pass marks. Check "Absent" to mark a student absent for that subject.
+      </div>
+    `;
+
+            // Calculate initial totals
+            students.forEach(s => updateTotal(s.id, subjects, marksMap));
+        }
+
+        function validateMarksInput(input) {
+            const max = parseInt(input.dataset.full);
+            const pass = parseInt(input.dataset.pass);
+            let val = parseInt(input.value);
+
+            if (val > max) { input.value = max; val = max; }
+            if (val < 0) { input.value = 0; val = 0; }
+
+            input.classList.toggle('fail', val < pass && input.value !== '');
+            updateTotal(
+                input.dataset.student,
+                currentSheet.subjects,
+                {}
+            );
+        }
+
+        function toggleAbsent(checkbox, studentId, subjectId) {
+            const input = document.getElementById(`marks_${studentId}_${subjectId}`);
+            if (checkbox.checked) {
+                input.value = '';
+                input.disabled = true;
+                input.classList.remove('fail');
+            } else {
+                input.disabled = false;
+            }
+            updateTotal(studentId, currentSheet.subjects, {});
+        }
+
+        function updateTotal(studentId, subjects, marksMap) {
+            let total = 0;
+            let full = 0;
+
+            subjects.forEach(subject => {
+                const absCheck = document.getElementById(`absent_${studentId}_${subject.id}`);
+                if (absCheck && absCheck.checked) return;
+
+                const input = document.getElementById(`marks_${studentId}_${subject.id}`);
+                const val = input ? parseInt(input.value) || 0 : 0;
+                total += val;
+                full += subject.full_marks;
+            });
+
+            const pct = full > 0 ? Math.round((total / full) * 100) : 0;
+            const cell = document.getElementById(`total_${studentId}`);
+            if (cell) {
+                cell.innerHTML = `
+        <div style="font-weight:600;">${total}/${full}</div>
+        <div style="font-size:11px;color:${pct >= 40 ? '#16a34a' : '#dc2626'};">
+          ${pct}%
+        </div>
+      `;
+            }
+        }
+
+        async function saveAllMarks() {
+            if (!currentSheet || !currentExamId) return;
+
+            const marksArray = [];
+            const { students, subjects } = currentSheet;
+
+            students.forEach(student => {
+                subjects.forEach(subject => {
+                    const input = document.getElementById(`marks_${student.id}_${subject.id}`);
+                    const absent = document.getElementById(`absent_${student.id}_${subject.id}`);
+
+                    if (!input) return;
+
+                    marksArray.push({
+                        student_id: student.id,
+                        subject_id: subject.id,
+                        marks_obtained: parseInt(input.value) || 0,
+                        full_marks: subject.full_marks,
+                        is_absent: absent && absent.checked ? 1 : 0
+                    });
+                });
+            });
+
+            const btn = document.getElementById('saveMarksBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                await ExamsAPI.saveMarks(currentExamId, marksArray);
+                showToast(`Marks saved for ${students.length} students`);
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Marks';
+            }
+        }
+
+        // ── Results ───────────────────────────────────────────────
+        async function viewResults(examId, examName) {
+            currentExamId = examId;
+            document.getElementById('resultTitle').textContent = `Results — ${examName}`;
+            showPanel('result');
+            document.getElementById('resultContainer').innerHTML =
+                '<div class="loading">Calculating results...</div>';
+
+            try {
+                const res = await ExamsAPI.getClassResult(examId);
+                const { exam, results } = res.data;
+                renderResults(exam, results);
+            } catch (err) {
+                document.getElementById('resultContainer').innerHTML =
+                    `<div class="loading">${err.message}</div>`;
+            }
+        }
+
+        function divisionClass(div) {
+            if (div === 'Distinction') return 'division-distinction';
+            if (div === 'First Division') return 'division-first';
+            if (div === 'Second Division') return 'division-second';
+            return 'division-fail';
+        }
+
+        function divisionBadgeBg(div) {
+            if (div === 'Distinction') return 'background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;';
+            if (div === 'First Division') return 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;';
+            if (div === 'Second Division') return 'background:#fffbeb;color:#d97706;border:1px solid #fde68a;';
+            return 'background:#fff5f5;color:#dc2626;border:1px solid #fecaca;';
+        }
+
+        function renderResults(exam, results) {
+            if (!results.length) {
+                document.getElementById('resultContainer').innerHTML =
+                    '<div class="loading">No marks entered yet for this exam.</div>';
+                return;
+            }
+
+            // Summary counts
+            const dist = results.filter(r => r.division === 'Distinction').length;
+            const first = results.filter(r => r.division === 'First Division').length;
+            const second = results.filter(r => r.division === 'Second Division').length;
+            const fail = results.filter(r => r.division === 'Fail').length;
+            const avgPct = Math.round(
+                results.reduce((s, r) => s + r.percentage, 0) / results.length
+            );
+
+            const rows = results.map(r => `
+      <tr>
+        <td style="padding:10px 14px;font-weight:600;color:#64748b;">${r.rank}</td>
+        <td style="padding:10px 14px;font-weight:500;">${r.student.name}</td>
+        <td style="padding:10px 14px;">${r.totalObtained} / ${r.totalFull}</td>
+        <td style="padding:10px 14px;font-weight:600;">
+          <span style="color:${r.percentage >= 40 ? '#16a34a' : '#dc2626'}">
+            ${r.percentage}%
+          </span>
+        </td>
+        <td style="padding:10px 14px;">
+          <span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;${divisionBadgeBg(r.division)}">
+            ${r.division}
+          </span>
+        </td>
+        <td style="padding:10px 14px;font-size:12px;color:#dc2626;">
+          ${r.failedSubjects.length ? r.failedSubjects.join(', ') : '—'}
+        </td>
+        <td style="padding:10px 14px;">
+          <button class="btn btn-sm"
+  style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-size:11px;"
+  onclick="downloadStudentReportCard(${r.student.id}, '${r.student.name}', ${exam.id}, '${exam.name}')">
+  Report Card
+</button>
+        </td>
+      </tr>
+    `).join('');
+
+            document.getElementById('resultContainer').innerHTML = `
+      <!-- Summary -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+                  gap:12px;margin-bottom:20px;">
+        <div class="summary-stat" style="background:#fff;border:1px solid #e8ecf0;
+             border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#1e2a3a;">
+            ${results.length}
+          </div>
+          <div style="font-size:12px;color:#64748b;">Total Students</div>
+        </div>
+        <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;
+             padding:14px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#7c3aed;">${dist}</div>
+          <div style="font-size:12px;color:#7c3aed;">Distinction</div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;
+             padding:14px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#16a34a;">${first}</div>
+          <div style="font-size:12px;color:#16a34a;">First Division</div>
+        </div>
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;
+             padding:14px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#d97706;">${second}</div>
+          <div style="font-size:12px;color:#d97706;">Second Division</div>
+        </div>
+        <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;
+             padding:14px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#dc2626;">${fail}</div>
+          <div style="font-size:12px;color:#dc2626;">Fail</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
+             padding:14px;text-align:center;">
+          <div style="font-size:22px;font-weight:700;color:#2563eb;">${avgPct}%</div>
+          <div style="font-size:12px;color:#64748b;">Class Average</div>
+        </div>
+      </div>
+
+      <!-- Results table -->
+      <div class="card">
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead>
+              <tr style="background:#1e2a3a;color:#fff;">
+                <th style="padding:10px 14px;text-align:left;">Rank</th>
+                <th style="padding:10px 14px;text-align:left;">Student</th>
+                <th style="padding:10px 14px;text-align:left;">Total</th>
+                <th style="padding:10px 14px;text-align:left;">%</th>
+                <th style="padding:10px 14px;text-align:left;">Division</th>
+                <th style="padding:10px 14px;text-align:left;">Failed Subjects</th>
+                <th style="padding:10px 14px;text-align:left;">Report</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+        }
+
+        function downloadStudentReportCard(studentId, name, examId, examName) {
+            ReportsAPI.downloadReportCard(studentId, examId, name, examName);
+        }
+        async function downloadResultPDF() {
+            if (!currentExamId) return;
+            try {
+                const res = await ExamsAPI.getClassResult(currentExamId);
+                const { exam, results } = res.data;
+                showToast(`Downloading ${results.length} report cards...`);
+                for (const r of results) {
+                    await ReportsAPI.downloadReportCard(
+                        r.student.id, currentExamId,
+                        r.student.name, exam.name
+                    );
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                showToast('All report cards downloaded');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ── Exam CRUD ─────────────────────────────────────────────
+        async function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Create Exam';
+            document.getElementById('saveBtn').textContent = 'Create Exam';
+            document.getElementById('fieldName').value = '';
+            document.getElementById('fieldType').value = 'unit_test';
+            document.getElementById('fieldYear').value = '2024';
+            document.getElementById('fieldDate').value = '';
+            document.getElementById('fieldDesc').value = '';
+
+            const res = await ClassesAPI.getAll();
+            const opts = res.data.map(c =>
+                `<option value="${c.id}">${c.name} - ${c.section}</option>`
+            ).join('');
+            document.getElementById('fieldClass').innerHTML =
+                '<option value="">— Select class —</option>' + opts;
+
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        async function openEditModal(id) {
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Exam';
+            document.getElementById('saveBtn').textContent = 'Update Exam';
+            try {
+                const res = await ExamsAPI.getOne(id);
+                const exam = res.data;
+                const cRes = await ClassesAPI.getAll();
+                const opts = cRes.data.map(c =>
+                    `<option value="${c.id}" ${c.id === exam.class_id ? 'selected' : ''}>
+          ${c.name} - ${c.section}
+        </option>`
+                ).join('');
+                document.getElementById('fieldClass').innerHTML =
+                    '<option value="">— Select class —</option>' + opts;
+                document.getElementById('fieldName').value = exam.name;
+                document.getElementById('fieldType').value = exam.type;
+                document.getElementById('fieldYear').value = exam.academic_year;
+                document.getElementById('fieldDate').value = exam.exam_date
+                    ? new Date(exam.exam_date).toISOString().split('T')[0] : '';
+                document.getElementById('fieldDesc').value = exam.description || '';
+                document.getElementById('modalOverlay').classList.add('open');
+            } catch (err) {
+                showToast('Failed to load exam', 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        async function saveExam() {
+            const name = document.getElementById('fieldName').value.trim();
+            const type = document.getElementById('fieldType').value;
+            const class_id = document.getElementById('fieldClass').value;
+            const academic_year = parseInt(document.getElementById('fieldYear').value);
+            const exam_date = document.getElementById('fieldDate').value;
+            const description = document.getElementById('fieldDesc').value.trim();
+
+            if (!name) { showToast('Exam name is required', 'error'); return; }
+            if (!class_id) { showToast('Please select a class', 'error'); return; }
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                if (editingId) {
+                    await ExamsAPI.update(editingId, { name, type, exam_date, description });
+                    showToast('Exam updated');
+                } else {
+                    await ExamsAPI.create({
+                        name, type, class_id, academic_year, exam_date, description
+                    });
+                    showToast('Exam created');
+                }
+                closeModal();
+                loadExams();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = editingId ? 'Update Exam' : 'Create Exam';
+            }
+        }
+
+        async function deleteExam(id, name) {
+            if (!confirm(`Delete exam "${name}"? This fails if marks exist.`)) return;
+            try {
+                await ExamsAPI.delete(id);
+                showToast('Exam deleted');
+                loadExams();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function handleLogout() {
+            removeToken();
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+
+        loadClassDropdowns().then(() => loadExams());
+    </script>
+</body>
+
+</html>

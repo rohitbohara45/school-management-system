@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetable — SchoolMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .tt-grid {
+            overflow-x: auto;
+        }
+
+        .tt-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 700px;
+        }
+
+        .tt-table th {
+            background: #1e2a3a;
+            color: #fff;
+            padding: 10px 14px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .tt-table th.period-col {
+            background: #0f2237;
+            min-width: 80px;
+        }
+
+        .tt-table td {
+            border: 1px solid #e8ecf0;
+            padding: 0;
+            vertical-align: top;
+            min-width: 120px;
+            height: 70px;
+        }
+
+        .tt-table td.period-label {
+            background: #f8fafc;
+            text-align: center;
+            font-weight: 600;
+            font-size: 12px;
+            color: #64748b;
+            padding: 8px;
+            white-space: nowrap;
+        }
+
+        .tt-cell {
+            height: 100%;
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .tt-cell:hover {
+            opacity: 0.85;
+        }
+
+        .tt-cell.filled {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-left: 3px solid #2563eb;
+        }
+
+        .tt-cell.empty {
+            background: #fafafa;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tt-cell.empty:hover {
+            background: #f0fdf4;
+        }
+
+        .tt-subject {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1e2a3a;
+            line-height: 1.2;
+        }
+
+        .tt-teacher {
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        .tt-time {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .tt-actions {
+            display: flex;
+            gap: 3px;
+            justify-content: flex-end;
+        }
+
+        .tt-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 11px;
+            line-height: 1;
+        }
+
+        .tt-btn:hover {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        .tt-add-icon {
+            font-size: 20px;
+            color: #d1d5db;
+        }
+
+        .empty:hover .tt-add-icon {
+            color: #16a34a;
+        }
+
+        .day-today th.day-col {
+            background: #2563eb !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h2>SchoolMS</h2><small>Admin Panel</small>
+            </div>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="students.html">Students</a>
+                <a href="teachers.html">Teachers</a>
+                <a href="classes.html">Classes</a>
+                <a href="subjects.html">Subjects</a>
+                <a href="exams.html">Exams</a>
+                <a href="marks.html">Marks</a>
+                <a href="attendance.html">Attendance</a>
+                <a href="fees.html">Fees</a>
+                <a href="notices.html">Notices</a>
+                <a href="timetable.html" class="active">Timetable</a>
+                <a href="promotion.html">Promotion</a>
+            </nav>
+            <div class="sidebar-footer">
+                <span id="adminName">Admin</span>
+                <button class="btn-logout" onclick="handleLogout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Timetable</h1>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn"
+                        style="background:#fff5f5;color:#dc2626;border:1px solid #fecaca;font-size:13px;"
+                        onclick="clearTimetable()">
+                        <i class="bi bi-trash"></i> Clear All
+                    </button>
+                    <button class="btn btn-primary" onclick="openAddModal()">
+                        + Add Period
+                    </button>
+                </div>
+            </div>
+
+            <!-- Class selector -->
+            <div class="card mb-4" style="padding:16px;">
+                <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                    <label style="font-size:13px;font-weight:500;color:#374151;">Class:</label>
+                    <select id="classSelect" onchange="loadTimetable()" style="padding:8px 14px;border:1px solid #d1d5db;border-radius:7px;
+                 font-size:14px;min-width:200px;">
+                        <option value="">— Select a class —</option>
+                    </select>
+                    <span style="font-size:13px;color:#64748b;" id="ttInfo"></span>
+                </div>
+            </div>
+
+            <!-- Days selector -->
+            <div class="card mb-3" style="padding:12px 16px;">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                    <span style="font-size:12px;color:#64748b;margin-right:4px;">Show days:</span>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="chkSun" onchange="renderGrid()"> Sun
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="chkMon" checked onchange="renderGrid()"> Mon
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="chkTue" checked onchange="renderGrid()"> Tue
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="chkWed" checked onchange="renderGrid()"> Wed
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="chkThu" checked onchange="renderGrid()"> Thu
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="chkFri" checked onchange="renderGrid()"> Fri
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="chkSat" onchange="renderGrid()"> Sat
+                    </label>
+                    <span style="margin-left:auto;font-size:12px;color:#94a3b8;">
+                        Click an empty cell to add a period
+                    </span>
+                </div>
+            </div>
+
+            <!-- Timetable grid -->
+            <div class="card">
+                <div id="timetableGrid">
+                    <div class="loading" style="padding:40px;">
+                        Select a class to view its timetable.
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Period Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h2 id="modalTitle">Add Period</h2>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Day *</label>
+                    <select id="fieldDay">
+                        <option>Sunday</option>
+                        <option>Monday</option>
+                        <option>Tuesday</option>
+                        <option>Wednesday</option>
+                        <option>Thursday</option>
+                        <option>Friday</option>
+                        <option>Saturday</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Period No. *</label>
+                    <select id="fieldPeriod">
+                        <option value="1">Period 1</option>
+                        <option value="2">Period 2</option>
+                        <option value="3">Period 3</option>
+                        <option value="4">Period 4</option>
+                        <option value="5">Period 5</option>
+                        <option value="6">Period 6</option>
+                        <option value="7">Period 7</option>
+                        <option value="8">Period 8</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Time *</label>
+                    <input type="time" id="fieldStart" value="07:00">
+                </div>
+                <div class="form-group">
+                    <label>End Time *</label>
+                    <input type="time" id="fieldEnd" value="07:45">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Subject *</label>
+                <select id="fieldSubject">
+                    <option value="">— Select subject —</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Teacher *</label>
+                <select id="fieldTeacher">
+                    <option value="">— Select teacher —</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" id="saveBtn" onclick="savePeriod()">
+                    Add Period
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        requireAuth();
+        document.getElementById('adminName').textContent =
+            localStorage.getItem('adminName') || 'Admin';
+
+        const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const DAY_IDS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const MAX_PERIODS = 8;
+
+        let currentClassId = null;
+        let timetableData = [];
+        let editingId = null;
+        let prefillDay = null;
+        let prefillPeriod = null;
+
+        // ── Load class dropdown ───────────────────────────────────
+        async function loadClasses() {
+            try {
+                const res = await ClassesAPI.getAll();
+                const opts = res.data.map(c =>
+                    `<option value="${c.id}">${c.name} - ${c.section}</option>`
+                ).join('');
+                document.getElementById('classSelect').innerHTML =
+                    '<option value="">— Select a class —</option>' + opts;
+            } catch (err) { }
+        }
+
+        // ── Load timetable for selected class ────────────────────
+        async function loadTimetable() {
+            currentClassId = document.getElementById('classSelect').value;
+            if (!currentClassId) {
+                document.getElementById('timetableGrid').innerHTML =
+                    '<div class="loading" style="padding:40px;">Select a class to view its timetable.</div>';
+                return;
+            }
+
+            try {
+                const res = await TimetableAPI.getByClass(currentClassId);
+                timetableData = res.data;
+                document.getElementById('ttInfo').textContent =
+                    `${timetableData.length} period(s) scheduled`;
+
+                // Load subjects for this class
+                const subRes = await SubjectsAPI.getByClass(currentClassId);
+                window._subjects = subRes.data;
+
+                // Load teachers
+                const tRes = await TeachersAPI.getAll();
+                window._teachers = tRes.data;
+
+                renderGrid();
+            } catch (err) {
+                document.getElementById('timetableGrid').innerHTML =
+                    `<div class="loading">${err.message}</div>`;
+            }
+        }
+
+        // ── Render the timetable grid ─────────────────────────────
+        function renderGrid() {
+            if (!currentClassId) return;
+
+            const activeDays = DAYS.filter((d, i) => {
+                const chk = document.getElementById(`chk${DAY_IDS[i]}`);
+                return chk && chk.checked;
+            });
+
+            if (!activeDays.length) {
+                document.getElementById('timetableGrid').innerHTML =
+                    '<div class="loading" style="padding:24px;">Select at least one day.</div>';
+                return;
+            }
+
+            // Build lookup map: day_period -> entry
+            const lookup = {};
+            timetableData.forEach(e => {
+                lookup[`${e.day}_${e.period_no}`] = e;
+            });
+
+            // Build table header
+            const dayHeaders = activeDays.map(d =>
+                `<th class="day-col">${d}</th>`
+            ).join('');
+
+            // Build rows
+            let rows = '';
+            for (let p = 1; p <= MAX_PERIODS; p++) {
+                let cells = '';
+                activeDays.forEach(day => {
+                    const entry = lookup[`${day}_${p}`];
+                    if (entry) {
+                        cells += `
+            <td>
+              <div class="tt-cell filled">
+                <div>
+                  <div class="tt-subject">${entry.subject_name}</div>
+                  <div class="tt-teacher">
+                    <i class="bi bi-person-fill"></i> ${entry.teacher_name}
+                  </div>
+                  <div class="tt-time">
+                    ${entry.start_time ? entry.start_time.slice(0, 5) : ''}
+                    ${entry.end_time ? '– ' + entry.end_time.slice(0, 5) : ''}
+                  </div>
+                </div>
+                <div class="tt-actions">
+                  <button class="tt-btn" title="Edit"
+                    onclick="openEditModal(${entry.id})" style="color:#2563eb;">
+                    <i class="bi bi-pencil-fill"></i>
+                  </button>
+                  <button class="tt-btn" title="Delete"
+                    onclick="deletePeriod(${entry.id})" style="color:#dc2626;">
+                    <i class="bi bi-trash-fill"></i>
+                  </button>
+                </div>
+              </div>
+            </td>`;
+                    } else {
+                        cells += `
+            <td onclick="openAddModalForSlot('${day}', ${p})">
+              <div class="tt-cell empty">
+                <i class="bi bi-plus-circle tt-add-icon"></i>
+              </div>
+            </td>`;
+                    }
+                });
+
+                rows += `
+        <tr>
+          <td class="period-label">Period ${p}</td>
+          ${cells}
+        </tr>`;
+            }
+
+            document.getElementById('timetableGrid').innerHTML = `
+      <div class="tt-grid">
+        <table class="tt-table">
+          <thead>
+            <tr>
+              <th class="period-col">Period</th>
+              ${dayHeaders}
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div style="padding:10px 16px;font-size:12px;color:#94a3b8;
+                  background:#f8fafc;border-top:1px solid #e8ecf0;">
+        <i class="bi bi-info-circle"></i>
+        Click any empty cell to add a period. Click edit/delete icons to modify.
+      </div>
+    `;
+        }
+
+        // ── Load subject and teacher dropdowns ────────────────────
+        function populateSubjectDropdown(selectedId = null) {
+            const subjects = window._subjects || [];
+            const opts = subjects.map(s =>
+                `<option value="${s.id}" ${s.id == selectedId ? 'selected' : ''}>
+        ${s.name} (${s.code})
+      </option>`
+            ).join('');
+            document.getElementById('fieldSubject').innerHTML =
+                '<option value="">— Select subject —</option>' + opts;
+        }
+
+        function populateTeacherDropdown(selectedId = null) {
+            const teachers = window._teachers || [];
+            const opts = teachers.map(t =>
+                `<option value="${t.id}" ${t.id == selectedId ? 'selected' : ''}>
+        ${t.name} — ${t.subject || 'No subject'}
+      </option>`
+            ).join('');
+            document.getElementById('fieldTeacher').innerHTML =
+                '<option value="">— Select teacher —</option>' + opts;
+        }
+
+        // ── Add modal ─────────────────────────────────────────────
+        function openAddModal() {
+            if (!currentClassId) {
+                showToast('Select a class first', 'error');
+                return;
+            }
+            editingId = null;
+            prefillDay = null;
+            prefillPeriod = null;
+            document.getElementById('modalTitle').textContent = 'Add Period';
+            document.getElementById('saveBtn').textContent = 'Add Period';
+            document.getElementById('fieldDay').value = 'Monday';
+            document.getElementById('fieldPeriod').value = '1';
+            document.getElementById('fieldStart').value = '07:00';
+            document.getElementById('fieldEnd').value = '07:45';
+            populateSubjectDropdown();
+            populateTeacherDropdown();
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        function openAddModalForSlot(day, period) {
+            if (!currentClassId) return;
+            editingId = null;
+            document.getElementById('modalTitle').textContent = `Add Period — ${day}, Period ${period}`;
+            document.getElementById('saveBtn').textContent = 'Add Period';
+            document.getElementById('fieldDay').value = day;
+            document.getElementById('fieldPeriod').value = String(period);
+
+            // Auto-fill time based on period number
+            const startHour = 7 + Math.floor((period - 1) * 0.75);
+            const startMin = ((period - 1) * 45) % 60;
+            const endHour = 7 + Math.floor(period * 0.75);
+            const endMin = (period * 45) % 60;
+            document.getElementById('fieldStart').value =
+                `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
+            document.getElementById('fieldEnd').value =
+                `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
+
+            populateSubjectDropdown();
+            populateTeacherDropdown();
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        async function openEditModal(id) {
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Period';
+            document.getElementById('saveBtn').textContent = 'Update Period';
+
+            const entry = timetableData.find(e => e.id === id);
+            if (!entry) { showToast('Entry not found', 'error'); return; }
+
+            document.getElementById('fieldDay').value = entry.day;
+            document.getElementById('fieldPeriod').value = String(entry.period_no);
+            document.getElementById('fieldStart').value = entry.start_time
+                ? entry.start_time.slice(0, 5) : '07:00';
+            document.getElementById('fieldEnd').value = entry.end_time
+                ? entry.end_time.slice(0, 5) : '07:45';
+
+            populateSubjectDropdown(entry.subject_id);
+            populateTeacherDropdown(entry.teacher_id);
+
+            // Disable day/period when editing
+            document.getElementById('fieldDay').disabled = true;
+            document.getElementById('fieldPeriod').disabled = true;
+
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+            document.getElementById('fieldDay').disabled = false;
+            document.getElementById('fieldPeriod').disabled = false;
+        }
+
+        // ── Save period ───────────────────────────────────────────
+        async function savePeriod() {
+            const day = document.getElementById('fieldDay').value;
+            const period_no = parseInt(document.getElementById('fieldPeriod').value);
+            const start_time = document.getElementById('fieldStart').value;
+            const end_time = document.getElementById('fieldEnd').value;
+            const subject_id = document.getElementById('fieldSubject').value;
+            const teacher_id = document.getElementById('fieldTeacher').value;
+
+            if (!subject_id) { showToast('Select a subject', 'error'); return; }
+            if (!teacher_id) { showToast('Select a teacher', 'error'); return; }
+            if (start_time >= end_time) {
+                showToast('End time must be after start time', 'error'); return;
+            }
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                if (editingId) {
+                    await TimetableAPI.update(editingId, {
+                        subject_id, teacher_id, start_time, end_time
+                    });
+                    showToast('Period updated');
+                } else {
+                    await TimetableAPI.create({
+                        class_id: currentClassId,
+                        subject_id, teacher_id,
+                        day, period_no, start_time, end_time
+                    });
+                    showToast('Period added');
+                }
+                closeModal();
+                loadTimetable();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = editingId ? 'Update Period' : 'Add Period';
+            }
+        }
+
+        // ── Delete period ─────────────────────────────────────────
+        async function deletePeriod(id) {
+            if (!confirm('Remove this period from the timetable?')) return;
+            try {
+                await TimetableAPI.delete(id);
+                showToast('Period removed');
+                loadTimetable();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ── Clear entire timetable ────────────────────────────────
+        async function clearTimetable() {
+            if (!currentClassId) { showToast('Select a class first', 'error'); return; }
+            if (!confirm('Clear the entire timetable for this class? This cannot be undone.')) return;
+            try {
+                await TimetableAPI.deleteByClass(currentClassId);
+                showToast('Timetable cleared');
+                loadTimetable();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function handleLogout() {
+            removeToken();
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+
+        loadClasses();
+    </script>
+</body>
+
+</html>
